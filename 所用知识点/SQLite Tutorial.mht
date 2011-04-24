@@ -1,0 +1,3334 @@
+From: <ÓÉ Windows Internet Explorer 8 ±£´æ>
+Subject: SQLite Tutorial
+Date: Mon, 19 Jul 2010 21:49:38 +0800
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_0000_01CB278C.49520D90"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.5931
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0000_01CB278C.49520D90
+Content-Type: text/html;
+	charset="gb2312"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://souptonuts.sourceforge.net/readme_sqlite_tutorial.html
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>SQLite Tutorial</TITLE>
+<META content=3D"text/html; charset=3Dgb2312" http-equiv=3DContent-Type>
+<META content=3Dno-cache http-equiv=3DPragma>
+<META content=3D-1 http-equiv=3DExpires>
+<META name=3DKEYWORDS=20
+content=3D"SQLite, select, C++, Perl, Tutorial, Linux, Mike Chirico">
+<META name=3DDESCRIPTION content=3D"SQLite tutorial">
+<STYLE type=3Dtext/css>PRE {
+=09
+}
+PRE {
+	BACKGROUND-COLOR: #ddd; FONT-SIZE: 12px
+}
+</STYLE>
+
+<META name=3DGENERATOR content=3D"MSHTML 8.00.6001.18928"></HEAD>
+<BODY>
+<TABLE border=3D0 cellSpacing=3D5 cellPadding=3D5 width=3D"80%">
+  <TBODY>
+  <TR>
+    <TD>
+      <H1>SQLite Tutorial</H1>
+      <P>Copyright (c) 2004 by Mike Chirico =
+mchirico@users.sourceforge.net=20
+      <BR>This material may be distributed only subject to the terms and =
+
+      conditions set forth in the Open Publication License v1.0, 8 June =
+1999 or=20
+      later. <BR><A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/readme_sqlite_tutorial.html">Th=
+e=20
+      latest update of this document </A>. <BR><BR>Updated: Thu Jan 11 =
+17:35:19=20
+      EST 2007 <BR>
+      <P>This article explores the power and simplicity of sqlite3, =
+starting=20
+      with common commands and triggers. It then covers the attach =
+statement=20
+      with the union operation, introduced in a way that allows multiple =
+tables,=20
+      in separate databases, to be combined as one virtual table, =
+without the=20
+      overhead of copying or moving data. Next, I demonstrate the simple =
+sign=20
+      function and the amazingly powerful trick of using this function =
+in SQL=20
+      select statements to solve complex queries with a single pass =
+through the=20
+      data, after making a brief mathematical case for how the sign =
+function=20
+      defines the absolute value and IF conditions.=20
+      <P>
+      <HR>
+
+      <P>Although the sign function currently does not exist in <A=20
+      href=3D"http://freshmeat.net/projects/sqlite/">sqlite3</A>, it is =
+very easy=20
+      to create in the "/src/func.c" file so that this function will be=20
+      permanently available to all sqlite applications. Normally, user =
+functions=20
+      are created in C, Perl, or C++, which is also documented in this =
+article.=20
+      sqlite3 has the ability to store "blob", binary data. The sample =
+program=20
+      in the download, "eatblob.c", reads a binary file of any size into =
+memory=20
+      and stores the data in a user-specified field.=20
+      <P>All examples can be found in <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/sqlite_examples.tar=
+.gz?download">sqlite_examples.tar.gz</A>,=20
+      and I encourage you to download these examples as you read this =
+document.=20
+      <P>This tutorial was made with sqlite3 version 3.0.8.=20
+      <H2>Getting Started</H2>
+      <H3>Common Commands</H3>
+      <P>To create a database file, run the command "sqlite3", followed =
+by the=20
+      database name. For example, to create the database "test.db", run =
+the=20
+      sqlite3 command as follows: <PRE>     $ sqlite3 test.db
+     SQLite version 3.0.8
+     Enter ".help" for instructions
+     sqlite&gt; .quit
+     $
+</PRE>
+      <P>The database file test.db will be created, if it does not =
+already=20
+      exist. Running this command will leave you in the sqlite3 =
+environment.=20
+      There are three ways to safely exit this environment: .q, .quit, =
+and=20
+      .exit.=20
+      <P>You do not have to enter the sqlite3 interactive environment. =
+Instead,=20
+      you could perform all commands at the shell prompt, which is ideal =
+when=20
+      running bash scripts and commands in an ssh string. Here is an =
+example of=20
+      how you would create a simple table from the command prompt: <PRE> =
+    $ sqlite3 test.db  "create table t1 (t1key INTEGER
+                  PRIMARY KEY,data TEXT,num double,timeEnter DATE);"
+</PRE>
+      <P>After table t1 has been created, data can be inserted as =
+follows: <PRE>     $ sqlite3 test.db  "insert into t1 (data,num) values =
+('This is sample data',3);"
+     $ sqlite3 test.db  "insert into t1 (data,num) values ('More sample =
+data',6);"
+     $ sqlite3 test.db  "insert into t1 (data,num) values ('And a little =
+more',9);"
+</PRE>
+      <P>As expected, doing a <CODE>select</CODE> returns the data in =
+the table.=20
+      Note that the primary key "t1key" auto increments; however, there =
+are no=20
+      default values for timeEnter. To populate the timeEnter field with =
+the=20
+      time, an update trigger is needed. Note that you should not use =
+the=20
+      abbreviation "INT" when working with the PRIMARY KEY. You must use =
+
+      "INTEGER" for the primary key to update. <PRE>     $ sqlite3 =
+test.db  "select * from t1 limit 2";
+     1|This is sample data|3|
+     2|More sample data|6|
+</PRE>
+      <P>In the statement above, the limit clause is used, and only two =
+rows are=20
+      displayed. For a quick reference of SQL syntax statements =
+available with=20
+      SQLite, see <A href=3D"http://www.sqlite.org/lang.html">the syntax =
+page</A>.=20
+      There is an offset option for the limit clause. For instance, the =
+third=20
+      row is equal to the following: "limit 1 offset 2". <PRE>     $ =
+sqlite3 test.db "select * from t1 order by t1key limit 1 offset 2";
+     3|And a little more|9|
+</PRE>
+      <P>The ".table" command shows the table names. For a more =
+comprehensive=20
+      list of tables, triggers, and indexes created in the database, =
+query the=20
+      master table "sqlite_master", as shown below. <PRE>     $ sqlite3 =
+test.db ".table"
+     t1
+
+     $ sqlite3 test.db "select * from sqlite_master"
+     table|t1|t1|2|CREATE TABLE t1 (t1key INTEGER
+                  PRIMARY KEY,data TEXT,num double,timeEnter DATE)
+
+</PRE>
+      <P>All SQL information and data inserted into a database can be =
+extracted=20
+      with the ".dump" command. Also, you might want to look for the=20
+      "~/.sqlite_history" file.=20
+      <P><PRE>     $ sqlite3 test.db ".dump"
+     BEGIN TRANSACTION;
+     CREATE TABLE t1 (t1key INTEGER
+                  PRIMARY KEY,data TEXT,num double,timeEnter DATE);
+     INSERT INTO "t1" VALUES(1, 'This is sample data', 3, NULL);
+     INSERT INTO "t1" VALUES(2, 'More sample data', 6, NULL);
+     INSERT INTO "t1" VALUES(3, 'And a little more', 9, NULL);
+     COMMIT;
+</PRE>
+      <P>The contents of the ".dump" can be filtered and piped to =
+another=20
+      database. Below, table t1 is changed to t2 with the sed command, =
+and it is=20
+      piped into the test2.db database. <PRE>      $ sqlite3 test.db =
+".dump"|sed -e s/t1/t2/|sqlite3 test2.db
+</PRE>
+      <H3>Triggers</H3>
+      <P>An insert trigger is created below in the file "trigger1". The=20
+      Coordinated Universal Time (UTC) will be entered into the field=20
+      "timeEnter", and this trigger will fire <EM>after</EM> a row has =
+been=20
+      inserted into the table t1. <PRE>     -- =
+********************************************************************
+     --   Creating a trigger for timeEnter
+     --     Run as follows:
+     --            $ sqlite3 test.db &lt; trigger1
+     -- =
+********************************************************************
+     CREATE TRIGGER insert_t1_timeEnter AFTER  INSERT ON t1
+     BEGIN
+      UPDATE t1 SET timeEnter =3D DATETIME('NOW')  WHERE rowid =3D =
+new.rowid;
+     END;
+     -- =
+********************************************************************
+</PRE>
+      <P>The AFTER specification in ..."insert_t1_timeEnter AFTER..." is =
+
+      necessary. Without the AFTER keyword, the rowid would not have =
+been=20
+      generated. This is a common source of errors with triggers, since =
+AFTER is=20
+      <EM>not</EM> the default, so it must be specified. If your trigger =
+depends=20
+      on newly-created data in any of the fields from the created row =
+(which was=20
+      the case in this example, since we need the rowid), the AFTER=20
+      specification is needed. Otherwise, the trigger is a BEFORE =
+trigger, and=20
+      will fire before rowid or other pertinent data is entered into the =
+field.=20
+      <P>Comments are preceded by "--". If this script were created in =
+the file=20
+      "trigger1", you could easily execute it as follows. <PRE>     $ =
+sqlite3 test.db &lt; trigger1
+</PRE>
+      <P>Now try entering a new record as before, and you should see the =
+time in=20
+      the field timeEnter. <PRE>     $ sqlite3 test.db  "insert into t1 =
+(data,num) values ('First entry with timeEnter',19);"
+
+     $ sqlite3 test.db "select * from t1";
+     1|This is sample data|3|
+     2|More sample data|6|
+     3|And a little more|9|
+     4|First entry with timeEnter|19|2004-10-02 15:12:19
+</PRE>
+      <P>The last value has timeEnter filled automatically with =
+Coordinated=20
+      Universal Time, or UTC. If you want localtime, use <CODE>select=20
+      datetime('now','localtime')</CODE>. See the note at the end of =
+this=20
+      section regarding UTC and localtime.=20
+      <P>For the examples that follow, the table "exam" and the database =
+
+      "examScript" will be used. The table and trigger are defined =
+below. Just=20
+      like the trigger above, UTC time will be used. <PRE>-- =
+*******************************************************************
+--  examScript: Script for creating exam table
+--   Usage:
+--       $ sqlite3 examdatabase &lt; examScript
+--
+--   Note: The trigger insert_exam_timeEnter
+--          updates timeEnter in exam
+-- *******************************************************************
+-- *******************************************************************
+CREATE TABLE exam (ekey      INTEGER PRIMARY KEY,
+	           fn        VARCHAR(15),
+                   ln        VARCHAR(30),
+                   exam      INTEGER,
+                   score     DOUBLE,
+                   timeEnter DATE);
+
+CREATE TRIGGER insert_exam_timeEnter AFTER  INSERT ON exam
+BEGIN
+
+UPDATE exam SET timeEnter =3D DATETIME('NOW')
+         WHERE rowid =3D new.rowid;
+END;
+-- *******************************************************************
+-- *******************************************************************
+</PRE>
+      <P>Here's an example usage: <PRE>    $ sqlite3 examdatabase &lt; =
+examScript
+    $ sqlite3 examdatabase "insert into exam (ln,fn,exam,score)
+           values ('Anderson','Bob',1,75)"
+
+    $ sqlite3 examdatabase "select * from exam"
+
+    1|Bob|Anderson|1|75|2004-10-02 15:25:00
+</PRE>
+      <P>As you can see, the PRIMARY KEY and current UTC time have been =
+updated=20
+      correctly.=20
+      <H3>Logging All Inserts, Updates, and Deletes</H3>
+      <P>The script below creates the table examlog and three triggers=20
+      (update_examlog, insert_examlog, and delete_examlog) to record =
+updates,=20
+      inserts, and deletes made to the exam table. In other words, =
+whenever a=20
+      change is made to the exam table, the changes will be recorded in =
+the=20
+      examlog table, including the old value and the new value. If you =
+are=20
+      familiar with MySQL, the functionality of this log table is =
+similar to=20
+      MySQL's binlog. See <A=20
+      href=3D"http://souptonuts.sourceforge.net/readme_mysql.htm">Tips =
+2, 24, and=20
+      25</A> if you would like more information on MySQL's log file. =
+<PRE>-- =
+*******************************************************************
+--  examLog: Script for creating log table and related triggers
+--   Usage:
+--       $ sqlite3 examdatabase &lt; examLOG
+--
+--
+-- *******************************************************************
+-- *******************************************************************
+CREATE TABLE examlog (lkey INTEGER PRIMARY KEY,
+                  ekey INTEGER,
+                  ekeyOLD INTEGER,
+                  fnNEW   VARCHAR(15),
+                  fnOLD   VARCHAR(15),
+                  lnNEW   VARCHAR(30),
+                  lnOLD   VARCHAR(30),
+                  examNEW INTEGER,
+                  examOLD INTEGER,
+                  scoreNEW DOUBLE,
+                  scoreOLD DOUBLE,
+                  sqlAction VARCHAR(15),
+                  examtimeEnter    DATE,
+                  examtimeUpdate   DATE,
+                  timeEnter        DATE);
+
+--  Create an update trigger
+CREATE TRIGGER update_examlog AFTER UPDATE  ON exam
+BEGIN
+
+  INSERT INTO examlog  (ekey,ekeyOLD,fnOLD,fnNEW,lnOLD,
+                        lnNEW,examOLD,examNEW,scoreOLD,
+                        scoreNEW,sqlAction,examtimeEnter,
+                        examtimeUpdate,timeEnter)
+
+          values (new.ekey,old.ekey,old.fn,new.fn,old.ln,
+                  new.ln,old.exam, new.exam,old.score,
+                  new.score, 'UPDATE',old.timeEnter,
+                  DATETIME('NOW'),DATETIME('NOW') );
+
+END;
+--
+--  Also create an insert trigger
+--    NOTE  AFTER keyword ------v
+CREATE TRIGGER insert_examlog AFTER INSERT ON exam
+BEGIN
+INSERT INTO examlog  (ekey,fnNEW,lnNEW,examNEW,scoreNEW,
+                      sqlAction,examtimeEnter,timeEnter)
+
+          values (new.ekey,new.fn,new.ln,new.exam,new.score,
+                  'INSERT',new.timeEnter,DATETIME('NOW') );
+
+END;
+
+--  Also create a DELETE trigger
+CREATE TRIGGER delete_examlog DELETE ON exam
+BEGIN
+
+INSERT INTO examlog  (ekey,fnOLD,lnNEW,examOLD,scoreOLD,
+                      sqlAction,timeEnter)
+
+          values (old.ekey,old.fn,old.ln,old.exam,old.score,
+                  'DELETE',DATETIME('NOW') );
+
+END;
+-- *******************************************************************
+-- *******************************************************************
+</PRE>
+      <P>Since the script above has been created in the file examLOG, =
+you can=20
+      execute the commands in sqlite3 as shown below. Also shown below =
+is a=20
+      record insert, and an update to test these newly-created triggers. =
+<PRE>  $ sqlite3 examdatabase &lt; examLOG
+
+  $ sqlite3 examdatabase "insert into exam
+                            (ln,fn,exam,score)
+                          values
+                            ('Anderson','Bob',2,80)"
+
+  $ sqlite3 examdatabase "update exam set score=3D82
+                             where
+                           ln=3D'Anderson' and fn=3D'Bob' and exam=3D2"
+</PRE>
+      <P>Now, by doing the select statement below, you will see that =
+examlog=20
+      contains an entry for the insert statement, plus two updates. =
+Although we=20
+      only did one update on the commandline, the trigger=20
+      "insert_exam_timeEnter" performed an update for the field =
+timeEnter; this=20
+      was the trigger defined in "examScript". In the second update, we =
+can see=20
+      that the score has been changed. The trigger is working. Any =
+change made=20
+      to the table, whether by user interaction or another trigger, is =
+recorded=20
+      in the examlog. <PRE>  $ sqlite3 examdatabase "select * from =
+examlog"
+
+  1|2||Bob||Anderson||2||80||INSERT|||2004-10-02 15:33:16
+  2|2|2|Bob|Bob|Anderson|Anderson|2|2|80|80|UPDATE||2004-10-02 =
+15:33:16|2004-10-02 15:33:16
+  3|2|2|Bob|Bob|Anderson|Anderson|2|2|82|80|UPDATE|2004-10-02 =
+15:33:16|2004-10-02 15:33:26|2004-10-02 15:33:26
+</PRE>
+      <P>Again, pay particular attention to the AFTER keyword. Remember =
+that by=20
+      default, triggers are BEFORE, so you must specify AFTER to insure =
+that all=20
+      new values will be available if your trigger needs to work with =
+any new=20
+      values.=20
+      <H3>UTC and Localtime</H3>
+      <P>Note that <CODE>select DATETIME('NOW')</CODE> returns UTC or=20
+      Coordinated Universal Time, but <CODE>select=20
+      datetime('now','localtime')</CODE> returns the current time. <PRE> =
+     sqlite&gt; select datetime('now');
+      2004-10-18 23:32:34
+
+      sqlite&gt; select datetime('now','localtime');
+      2004-10-18 19:32:46
+</PRE>
+      <P>There is an advantage to inserting UTC time like we did with =
+the=20
+      triggers above, since UTC can easily be converted to localtime =
+after UTC=20
+      has been entered in the table. See the command below. By inserting =
+UTC,=20
+      you avoid problems when working with multiple databases that may =
+not share=20
+      the same timezone and/or dst settings. By starting with UTC, you =
+can=20
+      always obtain the localtime. (Reference: <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/README_Working_With=
+_Time.html?download">Working=20
+      with Time</A>) <PRE>   CONVERTING TO LOCALTIME:
+
+   sqlite&gt; select datetime(timeEnter,'localtime') from exam;
+
+</PRE>
+      <H3>Other Date and Time Commands </H3>
+      <P>If you look in the sqlite3 source file "./src/date.c", you will =
+see=20
+      that datetime takes other options. For example, to get the =
+localtime, plus=20
+      3.5 seconds, plus 10 minutes, you would execute the following =
+command: <PRE>     sqlite&gt; select datetime('now','localtime','+3.5 =
+seconds','+10 minutes');
+     2004-11-07 15:42:26
+</PRE>
+      <P>It is also possible to get the weekday where 0 =3D Sunday, 1 =
+=3D Monday, 2=20
+      =3D Tuesday ... 6 =3D Saturday. <PRE>       sqlite&gt; select =
+datetime('now','localtime','+3.5 seconds','weekday 2');
+       2004-11-09 15:36:51
+</PRE>
+      <P>The complete list of options, or modifiers as they are called =
+in this=20
+      file, are as follows: <PRE>       NNN days
+       NNN hours
+       NNN minutes
+       NNN.NNNN seconds
+       NNN months
+       NNN years
+       start of month
+       start of year
+       start of week
+       start of day
+       weekday N
+       unixepoch
+       localtime
+       utc
+</PRE>
+      <P>In addition, there is the "strftime" function, which will take =
+a=20
+      timestring, and convert it to the specified format, with the=20
+      modifications. Here is the format for this function: <PRE>     **  =
+  strftime( FORMAT, TIMESTRING, MOD, MOD, ...)
+     **
+     ** Return a string described by FORMAT.  Conversions as follows:
+     **
+     **   %d  day of month
+     **   %f  ** fractional seconds  SS.SSS
+     **   %H  hour 00-24
+     **   %j  day of year 000-366
+     **   %J  ** Julian day number
+     **   %m  month 01-12
+     **   %M  minute 00-59
+     **   %s  seconds since 1970-01-01
+     **   %S  seconds 00-59
+     **   %w  day of week 0-6  sunday=3D=3D0
+     **   %W  week of year 00-53
+     **   %Y  year 0000-9999
+</PRE>
+      <P>Below is an example. <PRE>     sqlite&gt; select =
+strftime("%m-%d-%Y %H:%M:%S %s %w %W",'now','localtime');
+     11-07-2004 16:23:15 1099844595 0 44
+</PRE>
+      <H2>The ATTACH Command: Build a Virtual Table that Spans Multiple =
+Tables=20
+      on Separate Databases</H2>
+      <P>This is a very powerful concept. As you have seen, sqlite3 =
+works with a=20
+      local database file. Within this local database, multiple tables =
+can be=20
+      created. This section will examine a technique to combine multiple =
+tables=20
+      with the same field layout that exist in separate database files =
+into a=20
+      single virtual table. On this single virtual table, you will see =
+how=20
+      selects can be performed. There is no overhead in copying or =
+moving data.=20
+      No data gets copied or moved, period. This is the ideal situation =
+when=20
+      working with very large tables. Suppose the computers on your =
+network=20
+      record port scans from <A=20
+      href=3D"http://freshmeat.net/projects/snort/">snort</A> to a local =
+sqlite3=20
+      file. Provided you have access to the individual database files, =
+via NFS=20
+      mount or samba mount, you could virtually combine the tables from =
+all your=20
+      computers into one virtual table to perform database queries in an =
+effort=20
+      to identify global patterns of attack against your network.=20
+      <P>This example will be done with the examdatabase, since we still =
+have=20
+      the scripts that were used for the exam table. We can easily =
+create a new=20
+      database "examdatabase2", along with a new exam table, by =
+executing the=20
+      following script from the bash shell: <PRE>    $ sqlite3 =
+examdatabase2 &lt; examScript
+    $ sqlite3 examdatabase2 &lt; examLOG
+    $ sqlite3 examdatabase2 "insert into exam (ln,fn,exam,score) values =
+('Carter','Sue',1,89);
+                             insert into exam (ln,fn,exam,score) values =
+('Carter','Sue',2,100);"
+
+    $ sqlite3 examdatabase2 "select * from exam"
+    1|Sue|Carter|1|89|2004-10-02 16:04:12
+    2|Sue|Carter|2|100|2004-10-02 16:04:12
+</PRE>
+      <P>To combine the two database files, use the <CODE>attach</CODE> =
+command.=20
+      The alias for examdatabase will be e1, and the alias for =
+examdatabase2=20
+      will be e2. The shorter names will come in handy when the tables =
+are=20
+      joined with the union clause (a standard SQL command).=20
+      <P>After the "attach" database command is performed, the =
+".database"=20
+      command can be used to show the location of the individual =
+database files.=20
+      The location follows the alias. See the example below. <PRE>   $ =
+sqlite3
+   SQLite version 3.0.8
+   Enter ".help" for instructions
+   sqlite&gt; attach database 'examdatabase' as e1;
+   sqlite&gt; attach database 'examdatabase2' as e2;
+   sqlite&gt; .database
+   seq  name             file
+   ---  ---------------  =
+----------------------------------------------------------
+   0    main
+   2    e1               =
+/work/cpearls/src/posted_on_sf/sqlite_examples/sqlite_exam
+   3    e2               =
+/work/cpearls/src/posted_on_sf/sqlite_examples/sqlite_exam
+   sqlite&gt;
+</PRE>
+      <P>To select all data from both tables, perform the union of two =
+select=20
+      statements as demonstrated below. Note that by adding 'e1' and =
+'e2' to the=20
+      respective selects, it is possible to identify which database the =
+returned=20
+      records are coming from. <PRE>   sqlite&gt; select 'e1',* from =
+e1.exam union select 'e2',* from e2.exam;
+
+   e1|1|Bob|Anderson|1|75|2004-10-02 15:25:00
+   e1|2|Bob|Anderson|2|82|2004-10-02 15:33:16
+   e2|1|Sue|Carter|1|89|2004-10-02 16:04:12
+   e2|2|Sue|Carter|2|100|2004-10-02 16:04:12
+</PRE>
+      <P>To summarize: A query was performed on two tables that resided =
+in=20
+      separate databases. This union created the virtual table. The =
+select=20
+      syntax is as follows: <CODE>SELECT &lt;expression&gt; FROM=20
+      &lt;TABLE&gt;</CODE>. For the table option, we have used the =
+complete=20
+      string "(select 'e1' as db,* from e1.exam union select 'e2' as =
+db,* from=20
+      e2.exam)", which is our virtual table.=20
+      <P>Here is a query example performed on this virtual table. =
+Suppose you=20
+      wanted the maximum score by exam across databases. <PRE>      =
+sqlite&gt; select  exam,max(score) from
+             (select 'e1' as db,* from e1.exam union select 'e2' as db,* =
+from e2.exam)
+               group by exam;
+
+      1|89
+      2|100
+</PRE>
+      <P>No problem. You got the maximum score for each exam, but who =
+does it=20
+      below to? Find the ln and fn, but be careful; if you add "ln" and =
+"fn" to=20
+      the first part of the select, you will get the <EM>wrong</EM> =
+answer. <PRE>       sqlite&gt; select  exam,max(score),ln,fn from
+             (select 'e1' as db,* from e1.exam union select 'e2' as db,* =
+from e2.exam)
+               group by exam;
+
+          ** THIS IS INCORRECT; it should be Carter|Sue. **
+
+       1|89|Anderson|Bob
+       2|100|Anderson|Bob
+</PRE>
+      <P>"Anderson", "Bob" happens to be the name that dropped down in =
+this=20
+      select statement. It is not the correct answer. If, by chance, you =
+got the=20
+      correct answer by doing this query, it is because you entered the =
+names in=20
+      a different order. If that is the case, perform the query below, =
+which=20
+      takes the min(score) and gets an error on one of these examples.=20
+      <P>Here, the min(score) is queried. By chance, because of the =
+order in=20
+      which data was entered into this table, the correct answer is =
+displayed. <PRE>      sqlite&gt; select  exam,min(score),ln,fn from
+             (select 'e1' as db,* from e1.exam union select 'e2' as db,* =
+from e2.exam)
+               group by exam;
+
+         ** correct answer -- just chance **
+
+      1|75|Anderson|Bob
+      2|82|Anderson|Bob
+</PRE>
+      <P>Clearly, there needs to be a better way of finding out who got =
+the=20
+      maximum and minimum scores for each exam. Here is the correct SQL=20
+      statement which will always give the correct answer: <PRE>      =
+sqlite&gt; select db,ln,fn,exam,score from
+              (select 'e1' as db,* from e1.exam union select 'e2' as =
+db,* from e2.exam)
+	          where
+	              (
+	                score=3D(
+	                select max(score) from
+                   (select 'e1' as db,* from e1.exam union select 'e2' =
+as db,* from e2.exam)
+	                  where exam=3D1
+	                     )
+	                and exam =3D 1
+	                )
+	                OR
+	                (
+	                score=3D(
+	                 select max(score) from
+                    (select 'e1' as db,* from e1.exam union select 'e2' =
+as db,* from e2.exam)
+	                  where exam=3D2
+	                     )
+	                and exam =3D 2
+	                  )  ;
+
+        e2|Carter|Sue|1|89
+        e2|Carter|Sue|2|100
+
+</PRE>
+      <P>Or it can be done as two independent select statements as =
+follows: <PRE>    sqlite&gt; select db,ln,fn,exam,score from
+           (select 'e1' as db,* from e1.exam union select 'e2' as db,* =
+from e2.exam)
+            where exam=3D1 order by score desc limit 1;
+
+     e2|Carter|Sue|1|89
+
+     sqlite&gt; select db,ln,fn,exam,score from
+            (select 'e1' as db,* from e1.exam union select 'e2' as db,* =
+from e2.exam)
+            where exam=3D2 order by score desc limit 1;
+
+     e2|Carter|Sue|2|100
+</PRE>
+      <H3>A Pivot Table</H3>
+      <P>What if you wanted a pivot table in which the scores are listed =
+across=20
+      the top as exam1,exam2,..examN for each person? For example: <PRE> =
+   fn  ln         exam1  exam2
+    --- --------   -----  -----
+    Bob Anderson   75     82
+    Sue Carter     89     100
+</PRE>
+      <P>Also, is there a way to display the deltas between exams, to =
+have a=20
+      fifth column that would show 7 points (82-75) or the delta between =
+exam1=20
+      and exam2 and similar data for Sue Carter?=20
+      <P>Such power select statements can be done with the sign =
+function. And=20
+      unlike the case statement, the sign function can be placed in the =
+GROUP BY=20
+      and HAVING expressions of a SELECT statement. For example, taking =
+a look=20
+      at the general syntax of the SELECT statement, the sign function =
+can be=20
+      used anywhere you see an expression or expression-list. <PRE>   =
+SELECT [ALL | DISTINCT] result [FROM table-list]
+   [WHERE expr]
+   [GROUP BY expr-list]
+   [HAVING expr]
+   [compound-op select]*
+   [ORDER BY sort-expr-list]
+   [LIMIT integer [( OFFSET | , ) integer]]
+</PRE>
+      <P>The sign function does not exist in sqlite, but that is not a =
+problem,=20
+      since we can easily create it.=20
+      <P>As a side note, you may wonder why you should create the sign =
+function.=20
+      Instead, why not create an IF or IIF function? The main reason is =
+that the=20
+      IF statement is not standard on all databases, and, on some =
+databases=20
+      where it is standard (MySQL), it was created incorrectly. Yes, if =
+you are=20
+      a MySQL user, take a look at the following <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/README_mysql.txt?do=
+wnload">LONGWINDED=20
+      TIP 1</A> for an example of MySQL's incorrect IF statement and how =
+the=20
+      sign function solves this problem.=20
+      <H2>The Power of the Sign Function -- A Mathematical =
+Explanation</H2>
+      <P>It may come as a shock, but the problems in the last section, =
+and much=20
+      more, can be solved using the sign function. This is just the =
+simple=20
+      function in which sign(-200)=3D-1,.. sign(-1)=3D-1, sign(0)=3D0, =
+sign(1)=3D1,..=20
+      sign(300)=3D1. So if the number is &gt; 0 a 1 is returned. Zero is =
+the only=20
+      number that returns zero. All negative numbers return -1. Again, =
+this=20
+      simple function does not exist in sqlite, but you can easily =
+create it,=20
+      permanently. The next section will focus on the creation of this =
+function,=20
+      but here, the mathematical properties are explained.=20
+      <P>The sign function can define the absolute value function abs() =
+as the=20
+      value of a number times its sign, or sign(x)*(x), abbreviated =
+sign(x)(x).=20
+      Here is a more detailed look at this function: <PRE>       =
+sign(x)(x) =3D abs(x)
+
+       Example, assume x=3D3
+
+       sign(3)(3) =3D abs(3)
+       1*3 =3D 3
+
+       Example, assume x=3D-3
+
+       sign(-3)(-3) =3D abs(-3)
+       -1*-3 =3D 3
+
+       Example, assume x=3D0
+
+       sign(0)(0) =3D abs(0)
+       0*0   =3D 0
+
+</PRE>
+      <P>Comparisons can be made with the sign function between two =
+variables x=20
+      and y. For instance, if sign(x-y) is 1, then, x is greater than y. =
+<PRE>          sign(x-y) is equal to 1 if  x &gt; y
+
+          sign(x-y) is equal to 0 if  x =3D y
+
+          sign(x-y) is equal to -1 if  x &lt; y
+
+</PRE>
+      <P>Now look closely at the three statements below. The sign =
+function=20
+      starts to resemble an IF statement; a 1 is returned if and only if =
+x =3D y.=20
+      Thoroughly understanding the statements below is important, as the =
+rest of=20
+      the discussion quickly builds from these examples. <PRE>     IF ( =
+X=3D=3DY ) return 1;  ELSE return 0;
+
+       can be expressed as follows:
+
+          1 - abs(sign(x-y)) is equal to 0 if  x &gt; y
+
+          1 - abs(sign(x-y)) is equal to 1 if  x =3D y
+
+          1 - abs(sign(x-y)) is equal to  0 if  x &lt; y
+</PRE>
+      <P>It is possible to return a 1 if and only if x &lt; y, otherwise =
+return=20
+      a zero. <PRE>     IF ( X &lt; Y ) return 1;  ELSE return 0;
+
+       can be expressed as follows:
+
+          1-sign(1+sign(x-y)) is equal to 0 if  x &gt; y
+
+          1-sign(1+sign(x-y)) is equal to 0 if  x =3D y
+
+          1-sign(1+sign(x-y)) is equal to 1 if  x &lt; y
+</PRE>
+      <P>The last example is known as the delta for x&lt;y, or =
+Delta[x&lt;y].=20
+      This Delta notation will be used instead of writing it out in long =
+form or=20
+      using the IF statement. Therefore, the following is a summarized =
+table of=20
+      all the Delta functions or comparison operators. <PRE>          =
+Delta[x=3Dy]   =3D   1 - abs(sign(x-y))
+
+	  Delta[x!=3Dy]  =3D   abs(sign(x-y))
+
+          Delta[x&lt;y]   =3D   1-sign(1+sign(x-y))
+
+          Delta[x&lt;=3Dy]  =3D   sign(1-sign(x-y))
+
+          Delta[x&gt;y]   =3D   1-sign(1-sign(x-y))
+
+	  Delta[x&gt;=3Dy]  =3D   sign(1+sign(x-y))
+
+
+          Delta[z=3Dx AND z=3Dy] =3D sign( Delta[z=3Dx]*Delta[z=3Dy] )
+
+          Delta[z=3Dx OR  z=3Dy] =3D sign( Delta[z=3Dx]+Delta[z=3Dy] )
+
+          Delta[z&gt;x AND  z&lt;y] =3D sign( =
+Delta[z&gt;x]*Delta[z&lt;y] )
+
+          ... more can be defined ... but you get the idea
+</PRE>
+      <P>To summarize the following if statement, note the introduction =
+of a=20
+      third variable, z: <PRE>      if( x=3D=3Dy )
+	     return z;
+           else
+	     return 0;
+</PRE>
+      <P>The above expression, in Delta notation, is the following: =
+<PRE>         z*Delta[x=3Dy]
+</PRE>
+      <P>Here is an interesting example: <PRE>     create table logic =
+(value int);
+
+     insert into logic (value) values (1);
+     insert into logic (value) values (0);
+     insert into logic (value) values (-1);
+
+</PRE>
+      <P>First, take the Cartesian product to show all possible =
+combinations of=20
+      x and y. <PRE>      sqlite&gt; .header on
+      sqlite&gt; .mode column
+      sqlite&gt; select x.value,y.value from logic x, logic y;
+
+      x.value     y.value
+      ----------  ----------
+      1            1
+      1            0
+      1           -1
+      0            1
+      0            0
+      0           -1
+      -1           1
+      -1           0
+      -1          -1
+</PRE>
+      <P>After the sign function is created (which we will do in the =
+next=20
+      section), using the above table, we could examine Delta[x!=3Dy] as =
+follows; <PRE>      sqlite&gt; .header on
+      sqlite&gt; .mode column
+      sqlite&gt; select x.value,y.value,abs(sign(x.value-y.value)) from =
+logic x, logic y;
+
+
+      x.value     y.value     abs(sign(x.value-y.value))
+      ----------  ----------  --------------------------
+       1           1           0
+       1           0           1
+       1          -1           1
+       0           1           1
+       0           0           0
+       0          -1           1
+      -1           1           1
+      -1           0           1
+      -1          -1           0
+</PRE>
+      <P>Note that every time x is not equal to y, =
+abs(sign(x.value-y.value))=20
+      returns a 1. After the sign function is created, these example =
+will run.=20
+      This is extremely powerful. To show that we have created a =
+condition=20
+      statement without using the where or group by statements, consider =
+the=20
+      following example. z.value will only be displayed in the right =
+hand column=20
+      when x.value !=3D y.value. <PRE>  sqlite&gt; select =
+x.value,y.value,z.value,
+                  z.value*abs(sign(x.value-y.value))
+                  from logic x, logic y, logic z;
+
+      x.value     y.value     z.value     =
+z.value*abs(sign(x.value-y.value))
+      ----------  ----------  ----------  =
+----------------------------------
+       1            1            1           0
+       1            1            0           0
+       1            1           -1           0
+       1            0            1           1
+       1            0            0           0
+       1            0           -1          -1
+       1           -1            1           1
+       1           -1            0           0
+       1           -1           -1          -1
+       0            1            1           1
+       0            1            0           0
+       0            1           -1          -1
+       0            0            1           0
+       0            0            0           0
+       0            0           -1           0
+       0           -1            1           1
+       0           -1            0           0
+       0           -1           -1          -1
+      -1            1            1           1
+      -1            1            0           0
+      -1            1           -1          -1
+      -1            0            1           1
+      -1            0            0           0
+      -1            0           -1          -1
+      -1           -1            1           0
+      -1           -1            0           0
+      -1           -1           -1           0
+
+</PRE>
+      <H2>Modifying the Source: Creating a Permanent Sign Function</H2>
+      <P>Sqlite functions are defined in "./src/func.c". In this file, =
+the name=20
+      of this function will be "signFunc". The user will call this =
+function in=20
+      sqlite as sign(n). It will hold only a single variable.=20
+      <P>It is helpful to model the sign function after the abs function =
+
+      "absFunc", since they are very similar. If fact, I would highly =
+recommend=20
+      looking at the abs function any time a new version of sqlite is =
+released.=20
+      <P>You will want to follow these steps: First, copy the abs =
+function=20
+      "absFunc" and make the following changes:=20
+      <OL>
+        <LI>Change the function name from absFunc to signFunc.=20
+        <LI>Change the variable iVal. It should equal -1 if=20
+        sqlite3_value_type(argv[0]) is less than zero. Note that this =
+value is=20
+        an integer. Otherwise, if this integer is zero, return zero. Or =
+if this=20
+        integer is greater than zero, return 1. All of this can be =
+expressed=20
+        simply as follows: <PRE>    iVal =3D ( iVal &gt; 0) ? 1: ( iVal =
+&lt; 0 ) ? -1: 0;
+  </PRE>
+        <LI>Perform the same steps above for rVal, which is the real =
+value, as=20
+        opposed to the integer value above. <PRE>    rVal =3D ( rVal =
+&gt; 0) ? 1: ( rVal &lt; 0 ) ? -1: 0;
+  </PRE>
+        <LI>Add the following entry in aFuncs[]: <PRE>    { "sign", 1, =
+0, SQLITE_UTF8, 0, signFunc },
+  </PRE>
+        <LI>Recompile sqlite from the main directory and install. <PRE>  =
+  $ ./configure
+    $ make &amp;&amp; make install
+  </PRE></LI></OL>
+      <P>For a closer look, below is the section that changed. Look here =
+for the=20
+      complete file: <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/func.c.html">func.c</A>. =
+<PRE>  From ./src/func.c:
+
+... cut ...
+/*
+** Implementation of the sign() function
+*/
+static void signFunc(sqlite3_context *context, int argc, sqlite3_value =
+**argv){
+  assert( argc=3D=3D1 );
+  switch( sqlite3_value_type(argv[0]) ){
+    case SQLITE_INTEGER: {
+      i64 iVal =3D sqlite3_value_int64(argv[0]);
+ /* 1st change below. Line below was:  if( iVal&lt;0 ) iVal =3D iVal * =
+-1;     */
+
+      iVal =3D ( iVal &gt; 0) ? 1: ( iVal &lt; 0 ) ? -1: 0;
+      sqlite3_result_int64(context, iVal);
+      break;
+    }
+    case SQLITE_NULL: {
+      sqlite3_result_null(context);
+      break;
+    }
+    default: {
+ /* 2nd change below. Line for abs was: if( rVal&lt;0 ) rVal =3D rVal * =
+-1.0;  */
+
+      double rVal =3D sqlite3_value_double(argv[0]);
+      rVal =3D ( rVal &gt; 0) ? 1: ( rVal &lt; 0 ) ? -1: 0;
+      sqlite3_result_double(context, rVal);
+      break;
+    }
+  }
+}
+... cut ...
+
+  } aFuncs[] =3D {
+    { "min",               -1, 0, SQLITE_UTF8,    1, minmaxFunc },
+    { "min",                0, 0, SQLITE_UTF8,    1, 0          },
+    { "max",               -1, 2, SQLITE_UTF8,    1, minmaxFunc },
+    { "max",                0, 2, SQLITE_UTF8,    1, 0          },
+    { "typeof",             1, 0, SQLITE_UTF8,    0, typeofFunc },
+    { "length",             1, 0, SQLITE_UTF8,    0, lengthFunc },
+    { "substr",             3, 0, SQLITE_UTF8,    0, substrFunc },
+    { "substr",             3, 0, SQLITE_UTF16LE, 0, sqlite3utf16Substr =
+},
+    { "abs",                1, 0, SQLITE_UTF8,    0, absFunc    },
+    /*  Added here */
+    { "sign",               1, 0, SQLITE_UTF8,    0, signFunc   },
+    { "round",              1, 0, SQLITE_UTF8,    0, roundFunc  },
+    { "round",              2, 0, SQLITE_UTF8,    0, roundFunc  },
+... cut ...
+
+</PRE>
+      <H3>Using the New Sign Function</H3>
+      <P>Now, back to the problem of creating a pivot table for =
+displaying exam=20
+      scores in a spreadsheet-like format. First, more data is is =
+needed. By the=20
+      way, if have not added any data, the following script, <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/enterExamdata.html">enterE=
+xamdata</A>,=20
+      will create the necessary tables and insert the data. <PRE>  $ =
+sqlite3 examdatabase "insert into exam (ln,fn,exam,score) values =
+('Anderson','Bob',3,92)"
+  $ sqlite3 examdatabase "insert into exam (ln,fn,exam,score) values =
+('Anderson','Bob',4,95)"
+  $ sqlite3 examdatabase "insert into exam (ln,fn,exam,score) values =
+('Stoppard','Tom',1,88)"
+  $ sqlite3 examdatabase "insert into exam (ln,fn,exam,score) values =
+('Stoppard','Tom',2,90)"
+  $ sqlite3 examdatabase "insert into exam (ln,fn,exam,score) values =
+('Stoppard','Tom',3,92)"
+  $ sqlite3 examdatabase "insert into exam (ln,fn,exam,score) values =
+('Stoppard','Tom',4,95)"
+  $ sqlite3 examdatabase2 "insert into exam (ln,fn,exam,score) values =
+('Carter','Sue',3,99)"
+  $ sqlite3 examdatabase2 "insert into exam (ln,fn,exam,score) values =
+('Carter','Sue',4,95)"
+</PRE>
+      <P>Below is the select statement for generating a pivot table for =
+four=20
+      exams on the table exams. <PRE>     select ln,fn,
+        sum(score*(1-abs(sign(exam-1)))) as exam1,
+        sum(score*(1-abs(sign(exam-2)))) as exam2,
+        sum(score*(1-abs(sign(exam-3)))) as exam3,
+        sum(score*(1-abs(sign(exam-4)))) as exam4
+        from exam group by ln,fn;
+</PRE>
+      <P>Below is the select statement, like the statement above. =
+However, it=20
+      works on the virtual table, or the combined exam tables from the =
+databases=20
+      examdatabase and examdatabase2. <PRE>   $ sqlite3
+   SQLite version 3.0.8
+   Enter ".help" for instructions
+   sqlite&gt; attach database examdatabase as e1;
+   sqlite&gt; attach database examdatabase2 as e2;
+   sqlite&gt; .database
+   seq  name             file
+   ---  ---------------  =
+----------------------------------------------------------
+   0    main
+   2    e1               =
+/work/cpearls/src/posted_on_sf/sqlite_examples/sqlite_exam
+   3    e2               =
+/work/cpearls/src/posted_on_sf/sqlite_examples/sqlite_exam
+   sqlite&gt; .header on
+   sqlite&gt; .mode column
+   sqlite&gt; select ln,fn,sum(score*(1-abs(sign(exam-1)))) as exam1,
+                               sum(score*(1-abs(sign(exam-2)))) as =
+exam2,
+                               sum(score*(1-abs(sign(exam-3)))) as =
+exam3,
+                               sum(score*(1-abs(sign(exam-4)))) as exam4
+            from (select 'e1' as db,* from e1.exam union select 'e2' as =
+db,* from e2.exam)
+                              group by ln,fn;
+
+   ln          fn          exam1       exam2       exam3       exam4
+   ----------  ----------  ----------  ----------  ----------  =
+----------
+   Anderson    Bob         75          82          92          95
+   Carter      Sue         89          100         99          95
+   Stoppard    Tom         88          90          92          95
+
+   sqlite&gt;
+</PRE>
+      <P>Taking a closer look at the results, it's very easy to see that =
+
+      Anderson, Bob got 75 on the first exam, 82 on the second, 92 on =
+the third,=20
+      and 95 on the forth. Likewise, Stoppard received 88, 90, 92, and =
+95,=20
+      respectively. <PRE>   ln          fn          exam1       exam2    =
+   exam3       exam4
+   ----------  ----------  ----------  ----------  ----------  =
+----------
+   Anderson    Bob         75          82          92          95
+   Carter      Sue         89          100         99          95
+   Stoppard    Tom         88          90          92          95
+</PRE>
+      <P>Now back to the question of finding the top scores for each =
+exam in one=20
+      select statement. That is, finding the top scores for the combined =
+tables.=20
+      First, a look at all the data: <PRE>      $ sqlite3
+      SQLite version 3.0.8
+      Enter ".help" for instructions
+      sqlite&gt; attach database examdatabase as e1;
+      sqlite&gt; attach database examdatabase2 as e2;
+      sqlite&gt; .header on
+      sqlite&gt; .mode column
+      sqlite&gt; select 'e1' as db,* from e1.exam union select 'e2' as =
+db,* from e2.exam;
+      db          ekey        fn          ln          exam        score  =
+     timeEnter
+      ----------  ----------  ----------  ----------  ----------  =
+----------  -------------------
+      e1          1           Bob         Anderson    1           75     =
+     2004-10-17 22:01:42
+      e1          2           Bob         Anderson    2           82     =
+     2004-10-17 22:02:19
+      e1          3           Bob         Anderson    3           92     =
+     2004-10-17 22:05:04
+      e1          4           Bob         Anderson    4           95     =
+     2004-10-17 22:05:16
+      e1          5           Tom         Stoppard    1           88     =
+     2004-10-17 22:05:24
+      e1          6           Tom         Stoppard    2           90     =
+     2004-10-17 22:05:31
+      e1          7           Tom         Stoppard    3           92     =
+     2004-10-17 22:05:40
+      e1          8           Tom         Stoppard    4           95     =
+     2004-10-17 22:05:50
+      e2          1           Sue         Carter      1           89     =
+     2004-10-17 22:03:10
+      e2          2           Sue         Carter      2           100    =
+     2004-10-17 22:03:10
+      e2          3           Sue         Carter      3           99     =
+     2004-10-17 22:05:57
+      e2          4           Sue         Carter      4           95     =
+     2004-10-17 22:06:05
+      sqlite&gt;
+</PRE>
+      <P>Below, continuing with the same attached setup, is an example =
+of=20
+      horizontal averages and horizontal maximum values. <PRE>     =
+sqlite&gt; .headers on
+     sqlite&gt; .mode column
+     sqlite&gt; select db,ln as lastname,fn as first,
+                        sum(score*(1-abs(sign(exam-1)))) as exam1,
+                        sum(score*(1-abs(sign(exam-2)))) as exam2,
+                        sum(score*(1-abs(sign(exam-3)))) as exam3,
+                        sum(score*(1-abs(sign(exam-4)))) as exam4,
+                        avg(score) as avg, max(score) as max
+        from (select 'e1' as db,* from e1.exam union select 'e2' as db,* =
+from e2.exam)
+        group by ln,fn,db ;
+
+
+db          lastname    first       exam1       exam2       exam3       =
+exam4       avg         max
+----------  ----------  ----------  ----------  ----------  ----------  =
+----------  ----        ----
+e1          Anderson    Bob         75          82          92          =
+95          86          95
+e2          Carter      Sue         89          100         99          =
+95          95.75       100
+e1          Stoppard    Tom         88          90          92          =
+95          91.25       95
+
+</PRE>
+      <P>Try finding the deltas, or the differences between each exam =
+score. For=20
+      hints on this, see the end of <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/README_mysql.txt?do=
+wnload">this=20
+      article</A> in the LONGWINDED TIPS section.=20
+      <H3>Pivot Table "Spreadsheet Format" to Normalized Data</H3>
+      <P>Consider the reverse: Suppose you had a pivot table, or the =
+data in a=20
+      spreadsheet-like format, and you wanted a normalized table of =
+exams. For=20
+      this example, the table nonormal is needed. This table is defined =
+and=20
+      created as follows: <PRE>     SQLite version 3.0.8
+     Enter ".help" for instructions
+     sqlite&gt; attach database 'examdatabase' as e1;
+     sqlite&gt; attach database 'examdatabase2' as e2;
+     sqlite&gt; create table e1.nonormal as
+            select ln,fn,
+                 sum(score*(1-abs(sign(exam-1)))) as exam1,
+                 sum(score*(1-abs(sign(exam-2)))) as exam2,
+                 sum(score*(1-abs(sign(exam-3)))) as exam3,
+                 sum(score*(1-abs(sign(exam-4)))) as exam4
+       from (select 'e1' as db,* from e1.exam union select 'e2' as db,* =
+from e2.exam)
+                 group by ln,fn;
+
+      sqlite&gt; .header on
+      sqlite&gt; .mode column
+      sqlite&gt; select * from e1.nonormal;
+      ln          fn          exam1       exam2       exam3       exam4
+      ----------  ----------  ----------  ----------  ----------  =
+----------
+      Anderson    Bob         75          82          92          95
+      Carter      Sue         89          100         99          95
+      Stoppard    Tom         88          90          92          95
+</PRE>
+      <P>The nonormal table was created in the examdatabase, since "e1." =
+was=20
+      given before the name. Again, the objective here is to go =
+backwards and=20
+      create a normalized table from the pivot table, a table that will =
+list all=20
+      exam scores in one field and all the exam numbers in another, =
+without=20
+      having a separate field for each exam. In addition, the goal is to =
+do all=20
+      this in one select statement without looping through the data. =
+First, it=20
+      is necessary to create a number table, "enum", and it must have =
+the field=20
+      "e" from 1..N where N is the number of exams (which is four in =
+this case).=20
+<PRE>      sqlite&gt; CREATE TABLE enum (e int);
+      sqlite&gt; INSERT INTO "enum" VALUES(1);
+      sqlite&gt; INSERT INTO "enum" VALUES(2);
+      sqlite&gt; INSERT INTO "enum" VALUES(3);
+      sqlite&gt; INSERT INTO "enum" VALUES(4);
+</PRE>
+      <P>The coalesce function is used in an interesting way for this =
+example. <PRE>      sqlite&gt; .mode list
+      sqlite&gt; select n.ln,n.fn,
+
+         1*(1-abs(sign(e.e-1)))+
+         2*(1-abs(sign(e.e-2)))+
+         3*(1-abs(sign(e.e-3)))+
+         4*(1-abs(sign(e.e-4))),
+
+        coalesce(0/(e.e-1),n.exam1)+
+        coalesce(0/(e.e-2),n.exam2)+
+        coalesce(0/(e.e-3),n.exam3)+
+        coalesce(0/(e.e-4),n.exam4)
+
+        from enum as e,e1.nonormal as n;
+
+
+    Anderson|Bob|1|75
+    Carter|Sue|1|89
+    Stoppard|Tom|1|88
+    Anderson|Bob|2|82
+    Carter|Sue|2|100
+    Stoppard|Tom|2|90
+    Anderson|Bob|3|92
+    Carter|Sue|3|99
+    Stoppard|Tom|3|92
+    Anderson|Bob|4|95
+    Carter|Sue|4|95
+</PRE>
+      <P>For more examples, see <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/Solving_Complex_SQL=
+_Problems.txt?download">this=20
+      article</A>.=20
+      <H3>Max Min Problems</H3>
+      <P>Assume you have the following table of names, ages, and =
+salaries. Find=20
+      the age, name, and salary of the youngest person making the =
+overall=20
+      highest salary, or first find the highest salary, then, from this =
+group,=20
+      select the youngest person. <PRE>create table salary (name =
+varchar(3),age int, salary double);
+insert into salary values ('dan',23,67);
+insert into salary values ('bob',45,94);
+insert into salary values ('tom',24,94);
+insert into salary values ('sue',23,45);
+insert into salary values ('joe',45,51);
+insert into salary values ('sam',22,51);
+</PRE>
+      <P>Once you have the data entered, you will have the following; =
+<PRE>      sqlite&gt; .headers on
+      sqlite&gt; .mode column
+      sqlite&gt; select * from salary;
+      name        age         salary
+      ----------  ----------  ----------
+      dan         23          67
+      bob         45          94
+      tom         24          94
+      sue         23          45
+      joe         45          51
+      sam         22          51
+      sqlite&gt;
+</PRE>
+      <P>The following select will give you the youngest person making =
+the top=20
+      salary in the company: <PRE>      sqlite&gt;  select =
+1000-max(salary*1000-age)%1000 from salary;
+
+      1000-max(salary*1000-age)%1000
+      ------------------------------
+      24
+</PRE>
+      <P>This is the correct answer. The highest salary is 94 for Bob =
+and Tom.=20
+      Tom is the youngest at 24.=20
+      <P>Why the number 1000? Well, no one lives to be 1000, so we know =
+that age=20
+      will never be &gt;=3D 1000. Therefore, max(salary*1000-age) will =
+clearly=20
+      choose the highest salary independent of age, as long as salary is =
+&gt;=3D=20
+      1. In cases of a tie in salary, the youngest person will subtract =
+the=20
+      least amount from the salary, so this value will return as the =
+highest.=20
+      It's easy to remove the salary part from this number. Since salary =
+is=20
+      multiplied by 1000, it will disappear with mod 1000, since it's a =
+perfect=20
+      factor of 1000.=20
+      <P>To understand how this works, it is helpful to break the =
+statement into=20
+      separate, smaller parts, as follows: <PRE>      sqlite&gt; select =
+salary*1000-age,salary*1000,-age from salary;
+      salary*1000-age  salary*1000  -age
+      ---------------  -----------  ----------
+      66977            67000        -23
+      93955            94000        -45
+      93976            94000        -24
+      44977            45000        -23
+      50955            51000        -45
+      50978            51000        -22
+      sqlite&gt;
+</PRE>
+      <P>But what about the negative value for age? With the non-Knuth =
+method of=20
+      the mod function, "%", when x &lt; 0, then x % y will return x, if =
+abs(x)=20
+      &lt; abs(y).=20
+      <P>x % y is defined as follows: <PRE>    x % y =3D=3D  x - =
+INT(x/y)*y
+</PRE>
+      <P>and undefined for y =3D=3D 0. C and Fortran use this method.=20
+      <P>In contrast, the Knuth method, found in Python and accepted in=20
+      mathematics, defines this function as follows: <PRE>     x mod y =
+=3D=3D x - floor(x/y),
+</PRE>
+      <P>and equal to x if y =3D=3D 0=20
+      <P>The difference between the two shows up with negative values =
+for x.=20
+      <P>Or, put another way, as long as -x !=3D y, then -x % y =3D -x. =
+For example,=20
+      assume x=3D4 and y=3D5, then -4 % 5 will return a -4. Here are a =
+few other=20
+      examples. Again this is <EM>not</EM> the Knuth method for the mod=20
+      function. <PRE>   -1 % 5 =3D -1
+   -2 % 5 =3D -2
+   -3 % 5 =3D -3
+</PRE>
+      <P>So what we are really doing is the following: <PRE>      1000 + =
+ -1*(1000-age) =3D age
+</PRE>
+      <H2>C and C++ API</H2>
+      <H3>Simple C Program</H3>
+      <P>The following is a simple C program, <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/simplesqlite3.c.html">simp=
+lesqlite3.c</A>,=20
+      which will open a database and execute a SQL string. <PRE>
+    #include &lt;stdio.h&gt;
+    #include &lt;stdlib.h&gt;
+    #include &lt;sqlite3.h&gt;
+
+
+    static int callback(void *NotUsed, int argc, char **argv, char =
+**azColName){
+      NotUsed=3D0;
+      int i;
+      for(i=3D0; i&lt;argc; i++){
+        printf("%s =3D %s\n", azColName[i], argv[i] ? argv[i]: "NULL");
+      }
+      printf("\n");
+      return 0;
+    }
+
+    int main(int argc, char **argv){
+      sqlite3 *db;
+      char *zErrMsg =3D 0;
+      int rc;
+
+      if( argc!=3D3 ){
+        fprintf(stderr, "Usage: %s DATABASE SQL-STATEMENT\n", argv[0]);
+        exit(1);
+      }
+      rc =3D sqlite3_open(argv[1], &amp;db);
+      if( rc ){
+        fprintf(stderr, "Can't open database: %s\n", =
+sqlite3_errmsg(db));
+        sqlite3_close(db);
+        exit(1);
+      }
+      rc =3D sqlite3_exec(db, argv[2], callback, 0, &amp;zErrMsg);
+      if( rc!=3DSQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        /* This will free zErrMsg if assigned */
+        if (zErrMsg)
+           free(zErrMsg);
+      }
+      sqlite3_close(db);
+      return 0;
+    }
+</PRE>
+      <P>The command to compile and run the program is shown below. Note =
+the=20
+      "-Wl,-R/usr/local/lib" options, which will be needed if you =
+installed the=20
+      sqlite3 source, since the path "/usr/local/lib" may not be listed =
+in your=20
+      "/etc/ld.so.conf" file. <PRE>   gcc -o simplesqlite3 =
+simplesqlite3.c  -Wall -W -O2 -Wl,-R/usr/local/lib -lsqlite3
+</PRE>
+      <P>You either have to use the compile option above or add the =
+directory=20
+      where the sqlite3 library "libsqlite3.so" is installed to the file =
+
+      "/etc/ld.so.conf", then run <CODE>ldconfig</CODE> from the shell. =
+I prefer=20
+      to use the "-Wl,-R" option instead, but there are the steps. <PRE> =
+    $ locate libsqlite3.so
+     /usr/local/lib/libsqlite3.so.0.8.6
+     /usr/local/lib/libsqlite3.so.0
+     /usr/local/lib/libsqlite3.so    &lt;--- note directory is =
+/usr/local/lib
+
+     $ echo "/usr/local/lib" &gt;&gt; /etc/ld.so.conf
+     $ ldconfig
+</PRE>
+      <P>After you have entered and compiled the program, it will run as =
+
+      follows: <PRE>  $ ./simplesqlite3 test.db "create table notes (t =
+text)"
+
+  $ ./simplesqlite3 test.db "insert into  notes (t) values ('
+  &gt; This is some random
+  &gt; stuff to add'
+  &gt;);"
+
+  $ ./simplesqlite3 test.db "select * from notes"
+
+  t =3D
+  This is some random
+  stuff to add
+</PRE>
+      <P>There are really only three important statements,=20
+      <CODE>sqlite3_open()</CODE>, which takes the name of the database =
+and a=20
+      database pointer, <CODE>sqlite3_exec()</CODE>, which executes the =
+SQL=20
+      commands in argv[2] and lists the callback function used to =
+display the=20
+      results, and <CODE>sqlite3_close()</CODE>, which closes the =
+database=20
+      connection.=20
+      <H3>A C++ Program -- Building a Class to Do the Work</H3>
+      <P>It is possible to build a class, SQLITE3 (defined below), which =
+reads=20
+      the returned data into a vector. Note that instead of using the=20
+      <CODE>sqlite3_exec()</CODE> function, =
+<CODE>sqlite3_get_table()</CODE> is=20
+      used instead. It copies the result of the SQL statement into the =
+variable=20
+      array of string <CODE>result</CODE>. Note this variable must be =
+freed with=20
+      <CODE>sqlite3_free_table()</CODE> after it has been used to copy =
+the=20
+      returned SQL headings and data into the vectors =
+<CODE>vcol_head</CODE> and=20
+      <CODE>vdata</CODE>. Note that the first row is the heading. <PRE>  =
+class SQLITE3 {
+  private:
+    sqlite3 *db;
+    char *zErrMsg;
+    char **result;
+    int rc;
+    int nrow,ncol;
+    int db_open;
+
+  public:
+
+    std::vector&lt;std::string&gt; vcol_head;
+    std::vector&lt;std::string&gt; vdata;
+
+    SQLITE3 (std::string tablename=3D"init.db"): zErrMsg(0), =
+rc(0),db_open(0) {
+      rc =3D sqlite3_open(tablename.c_str(), &amp;db);
+      if( rc ){
+        fprintf(stderr, "Can't open database: %s\n", =
+sqlite3_errmsg(db));
+        sqlite3_close(db);
+      }
+      db_open=3D1;
+    }
+
+    int exe(std::string s_exe) {
+        rc =3D sqlite3_get_table(
+  			db,              /* An open database */
+  			s_exe.c_str(),       /* SQL to be executed */
+  			&amp;result,       /* Result written to a char *[]  that this =
+points to */
+  			&amp;nrow,             /* Number of result rows written here */
+  			&amp;ncol,          /* Number of result columns written here */
+  			&amp;zErrMsg          /* Error msg written here */
+  			);
+
+        if(vcol_head.size()&lt;0) { vcol_head.clear();  }
+        if(vdata.size()&lt;0)     { vdata.clear(); }
+
+
+       if( rc =3D=3D SQLITE_OK ){
+        for(int i=3D0; i &lt; ncol; ++i)
+  	vcol_head.push_back(result[i]);   /* First row heading */
+        for(int i=3D0; i &lt; ncol*nrow; ++i)
+  	vdata.push_back(result[ncol+i]);
+       }
+       sqlite3_free_table(result);
+        return rc;
+    }
+
+    ~SQLITE3(){
+        sqlite3_close(db);
+    }
+  };
+
+</PRE>
+      <P>The complete program can be found in <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/sqlite_examples.tar=
+.gz?download">this=20
+      example</A> or viewed here: <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/simplesqlite3cpp2.cc.html"=
+>simplesqlite3cpp2.cc</A>.=20
+
+      <P>With the class defined above, it can be used in =
+<CODE>main</CODE> or in=20
+      a function as follows: <PRE>    std::string s;
+    SQLITE3 sql("database.db");
+
+
+    sql.exe("create table notes (t text)");
+    s=3D"insert into notes (t) values ('sample data')";
+    sql.exe(s);
+
+    s=3D"select t from notes";
+    sql.exe(s);
+</PRE>
+      <P>The following, still assuming this code will be entered in main =
+or a=20
+      function, is an example of printing the data from a select. Note =
+the=20
+      headings section and the data sections. <PRE>  if( =
+sql.vcol_head.size() &gt; 0 )
+    {
+      std::cout &lt;&lt; "Headings" &lt;&lt; std::endl;
+      copy(sql.vcol_head.begin(),
+                sql.vcol_head.end(),
+                =
+std::ostream_iterator&lt;std::string&gt;(std::cout,"\t"));
+
+      std::cout &lt;&lt; std::endl &lt;&lt; std::endl;
+      std::cout &lt;&lt; "Data" &lt;&lt; std::endl;
+      copy(sql.vdata.begin(),
+                sql.vdata.end(),
+                 =
+std::ostream_iterator&lt;std::string&gt;(std::cout,"\t"));
+
+      std::cout &lt;&lt; std::endl;
+    }
+</PRE>
+      <H3>Defining SQLite User Functions</H3>
+      <P>There are two types of functions, aggregate functions and =
+simple=20
+      functions. Simple functions like sign(), which was created above, =
+can be=20
+      used in any expression. Aggregate functions like "avg()" can only =
+be used=20
+      in the select statement. Some functions like "min" and "max" can =
+be=20
+      defined as both. min() with 1 argument is an aggregate function, =
+whereas=20
+      min() with an unlimited number of arguments is a simple function.=20
+      <P>Here is an example which illustrates the difference: <PRE>      =
+$ sqlite3
+      SQLite version 3.0.8
+      Enter ".help" for instructions
+      sqlite&gt; create table junk (a integer);
+      sqlite&gt; insert into junk (a) values (1);
+      sqlite&gt; insert into junk (a) values (2);
+      sqlite&gt; insert into junk (a) values (3);
+      sqlite&gt; select * from junk;
+      1
+      2
+      3
+
+      sqlite&gt; select * from junk where a=3Dmin(1,2,3,4,5);
+      1
+      sqlite&gt; select * from junk where a=3Dmin(1);
+      SQL error: misuse of aggregate function min()
+      sqlite&gt;
+</PRE>
+      <P>Note above that the min() function, with only one variable, is =
+an=20
+      aggregate function. Since it is only an aggregate function, it =
+cannot be=20
+      used after the <CODE>where</CODE> clause. An aggregate function =
+can only=20
+      be used after the select clause as follows: <PRE>      sqlite&gt; =
+select min(a) from junk
+      1
+</PRE>
+      <P>If you add a second argument, you're calling the simple =
+function. Note=20
+      below that each row is compared to 2.3. Look closely; there is a =
+subtle=20
+      but important difference here. <PRE>      sqlite&gt; select =
+min(a,2.3) from junk
+      2
+      2.3
+      1
+</PRE>
+      <H3>Creating a User-defined Sign Function: msign</H3>
+      <P>Below is an example of the sign function. It is called =
+msignFunc so as=20
+      not to interfere with the permanent sign function that was created =
+
+      earlier. <PRE>void msignFunc(sqlite3_context *context, int argc, =
+sqlite3_value **argv){
+  assert( argc=3D=3D1 );
+  switch( sqlite3_value_type(argv[0]) ){
+    case SQLITE_INTEGER: {
+      long long int iVal =3D sqlite3_value_int64(argv[0]);
+      iVal =3D ( iVal &gt; 0) ? 1: ( iVal &lt; 0 ) ? -1: 0;
+      sqlite3_result_int64(context, iVal);
+      break;
+    }
+    case SQLITE_NULL: {
+      sqlite3_result_null(context);
+      break;
+    }
+    default: {
+      double rVal =3D sqlite3_value_double(argv[0]);
+      rVal =3D ( rVal &gt; 0) ? 1: ( rVal &lt; 0 ) ? -1: 0;
+      sqlite3_result_double(context, rVal);
+      break;
+    }
+  }
+}
+
+</PRE>
+      <P>This function is initiated as follows: =
+<PRE>sqlite3_create_function(db, "msign", 1, SQLITE_UTF8, NULL,
+                 &amp;msignFunc, NULL, NULL));
+</PRE>
+      <P>Note that "msign" is the name of the function in sqlite3. It is =
+the=20
+      name you would use in a select statement: "select msign(3);". The =
+1 is the=20
+      number of arguments. The msign function here only takes one =
+argument.=20
+      SQLITE_UTF8 is for the text representation. Then, skipping over =
+NULL,=20
+      &amp;msignFunc is the name of the C function. The last two values =
+must be=20
+      NULL for a simple function; again, a simple function can be used =
+in any=20
+      part of the select <CODE>where</CODE> clause.=20
+      <H3>Aggregate Functions</H3>
+      <P>A good place to look for ideas on creating functions is the=20
+      ./src/func.c file in the sqlite3 source. Suppose you would like to =
+create=20
+      a new sum function call S. It will create the aggregate sum of the =
+rows.=20
+      <P>The following data is used to explain this function. <PRE>    $ =
+./myfuncpp DATABASE "create table t(a integer, b integer, c integer)"
+    $ ./myfuncpp DATABASE "insert into t (a,b,c) values (1,-1,2)"
+    $ ./myfuncpp DATABASE "insert into t (a,b,c) values (2,-2,4)"
+    $ ./myfuncpp DATABASE "insert into t (a,b,c) values (3,-3,8)"
+    $ ./myfuncpp DATABASE "insert into t (a,b,c) values (4,-4,16)"
+    $ ./myfuncpp DATABASE "select * from t"
+    a =3D 1 b =3D -1 c =3D 2
+    a =3D 2 b =3D -2 c =3D 4
+    a =3D 3 b =3D -3 c =3D 8
+    a =3D 4 b =3D -4 c =3D 16
+    a =3D 4 b =3D -4 c =3D 16
+</PRE>
+      <P>Now for how the function S will create a list of the sums. =
+Unlike the=20
+      standard aggregate sum() function, a list is returned. <PRE>     $ =
+./myfuncpp DATABASE "select S(a),S(b),S(c) from t"
+     S(a) =3D (1,3,6,10,14) S(b) =3D (-1,-3,-6,-10,-14) S(c) =3D =
+(2,6,14,30,46)
+</PRE>
+      <P>Note that a column which contains the values in the table =
+(1,2,3,4,5)=20
+      shows the cumulative sum (1,1+2=3D3,1+2+3=3D6,1+..) in a list. =
+This is=20
+      different from any function defined in ./src/func.c, since the =
+data must=20
+      be in a string.=20
+      <P>To view this example and all other examples, see the <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/sqlite_examples.tar=
+.gz?download">download</A>.=20
+      Since a list is returned, this example will use the C++ =
+std::stringstream,=20
+      since this is fast and well suited for all types of data, integer, =
+double,=20
+      and text.=20
+      <P>Since S is an aggregate function, there are two functions, =
+"SStep" and=20
+      "SFinalize". Aggregate functions always have a "Step" and a =
+"Finalize".=20
+      "Step" is called for each row, and after the last row, the =
+"Finalize"=20
+      function is called.=20
+      <P>Both the Step and the Finalize can make use of a structure for =
+holding=20
+      the cumulated data collected from each row. For this function, the =
+
+      structure SCtx is defined below. std::stringstream is global. I =
+would not=20
+      advise putting an additional variable in SCtx, "char *ss". You may =
+think=20
+      that this could be dynamically increased with realloc, which will =
+work.=20
+      However, the problem is freeing the memory hanging off the =
+structure.=20
+      There's a bit of confusion here. As the sqlite documentation =
+correctly=20
+      points out, the structure SCtx will be freed; but again, in my =
+testing,=20
+      any additional memory allocated off members in the structure will =
+not. On=20
+      the other hand, an array of std:stringstrings "BS" will have to be =
+kept=20
+      for when this function is called more than once in the same select =
+"select=20
+      S(a),S(b),...S(100th)" The overhead appears minimal. <PRE>     =
+#define MAXSSC 100
+
+     typedef struct SCtx SCtx;
+     struct SCtx {
+       double sum;     /* Sum of terms */
+       int cnt;        /* Number of elements summed */
+       int sscnt;      /* Keeps counts for ss */
+     };
+
+     std::stringstream ss[MAXSSC];
+     int sscnt=3D0;
+</PRE>
+      <P>Below is the step function. p gets initialized the first time =
+through=20
+      SStep. On the first pass, all the values in the SCtx structure =
+will be=20
+      zeroed. This is a feature of "sqlite3_aggregate_context". Since=20
+      std::stringstream s0 is defined as a global variable, care will =
+have to be=20
+      taken to ensure that when S is called in the same select =
+"<CODE>Select=20
+      S(a),S(b)...</CODE>", S(a) does not use S(b)'s stringstream. <PRE> =
+    static void SStep(sqlite3_context *context, int argc, sqlite3_value =
+**argv){
+       SCtx *p=3DNULL;
+       int i;
+
+       std::string d;
+       if( argc&lt;1 ) return;
+       p =3D (SCtx *) sqlite3_aggregate_context(context, sizeof(*p));
+       if( p-&gt;cnt =3D=3D 0)    /* When zero first time through */
+         {
+           if ( sscnt  &gt;=3D MAXSSC )
+             { fprintf(stderr,"MAXSSC needs to increase\n");
+               exit(1);
+             }
+           p-&gt;sscnt=3Dsscnt;
+           sscnt++;
+           ss[p-&gt;sscnt].str("");
+           ss[p-&gt;sscnt] &lt;&lt; "(";
+          d=3D"";
+         } else {
+            d=3D",";
+
+         }
+
+         p-&gt;sum +=3D sqlite3_value_double(argv[0]);
+         p-&gt;cnt++;
+         ss[p-&gt;sscnt] &lt;&lt; d &lt;&lt;  p-&gt;sum ;
+
+
+     /*
+      *      If the simple function is not used, this
+      *      comes into play.
+      */
+         if (p-&gt;cnt =3D=3D 1)
+           {
+             for(i=3D1; i&lt; argc; ++i) {
+               p-&gt;cnt++;
+               p-&gt;sum+=3Dsqlite3_value_double(argv[i]);
+               ss[p-&gt;sscnt] &lt;&lt;  "," &lt;&lt; p-&gt;sum ;
+               }
+
+           }
+
+     }
+
+</PRE>
+      <P>The line: <PRE>p =3D (SCtx *) =
+sqlite3_aggregate_context(context, sizeof(*p));
+</PRE>
+      <P>will initialize p-&gt;sum, p-&gt;cnt, and p-&gt;sscnt to zero =
+on the=20
+      first entry into this function. On each successive entry, the old =
+values=20
+      be passed back. Although the std:stringstream ss variable is =
+global, S(a)=20
+      called in the select uses ss[0], S(b) will use ss[1], etc.=20
+      <P>Also note the comment "<EM>If</EM> the simple function is not =
+used,=20
+      this comes into play". Below that statement, i walks through the =
+argument=20
+      count. It is possible to have a function name "S", in this case =
+defined as=20
+      both an aggregate function and a simple function. The distinction =
+is made=20
+      with the number of arguments in the calling function. This is set =
+in=20
+      sqlite3_create_function. For example, a name could be assigned to =
+a simple=20
+      function and an aggregate function. Normally, this is set up so =
+that the=20
+      simple function takes two or more arguments max(1,2,3,4,5) and the =
+
+      aggregate function just takes one argument max(a). Take a look at=20
+      <CODE>max</CODE> in <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/func.c.html">./src/func.c<=
+/A>.=20
+
+      <P>Here is the Finalize function: <PRE>     static void =
+SFinalize(sqlite3_context *context){
+       SCtx *p=3DNULL;
+       char *buf=3DNULL;
+       p =3D (SCtx *) sqlite3_aggregate_context(context, sizeof(*p));
+
+       ss[p-&gt;sscnt] &lt;&lt; ")";
+       buf =3D (char *) malloc =
+(sizeof(char)*(ss[p-&gt;sscnt].str().size()+1));
+       if (buf =3D=3D NULL)
+         fprintf(stderr,"malloc error in SNFinalize, buf\n");
+
+
+
+       =
+snprintf(buf,ss[p-&gt;sscnt].str().size(),"%s",ss[p-&gt;sscnt].str().c_st=
+r());
+       =
+sqlite3_result_text(context,buf,ss[p-&gt;sscnt].str().size()+1,free );
+       sscnt--;    /* reclaim this stream */
+
+     }
+</PRE>
+      <P>After all the rows in <CODE>select</CODE> have gone through the =
+"SStep"=20
+      function, the "SFinalize" function is called. The last value for =
+the SCTx=20
+      structure is assigned to p in the statement "<CODE>p =3D (SCtx *)=20
+      sqlite3_aggregate_context(context, sizeof(*p));</CODE>". Note that =
+
+      p-&gt;sscnt is needed for indexing the correct ss. The proper =
+memory size=20
+      is allocated using +1 in ss[p-&gt;sscnt].str().size()+1, to allow =
+for the=20
+      NUL character. sqlite3_result_text takes care of freeing the =
+memory=20
+      allocated for buf.=20
+      <P>The user functions "SStep" and "SFinalize" need to be added to =
+the SQL=20
+      language interpreter. This is done with the =
+"sqlite3_create_function": <PRE>
+  if (sqlite3_create_function(db, "S", 1, SQLITE_UTF8, NULL, NULL, =
+&amp;SStep,
+			      &amp;SFinalize) !=3D 0)
+    fprintf(stderr,"Problem with S using SStep and SFinalize\n");
+
+</PRE>
+      <P>Note the 1 for the third argument. This aggregate function is =
+used when=20
+      one argument is passed. To have it both ways, to have "S" defined =
+as both=20
+      an aggregate and a simple function, an SFunc would have to be =
+created.=20
+      That could handle 2 to N variables. Once this function is created, =
+the=20
+      additional "sqlite3_create_function" would be defined in =
+<CODE>main</CODE>=20
+      as follows: <PRE>... still in main
+  if (sqlite3_create_function(db, "S", -1, SQLITE_UTF8, NULL, =
+&amp;SFunc, NULL,
+			      NULL) !=3D 0)
+    fprintf(stderr,"Problem with S using SFunc -- simple function\n");
+</PRE>
+      <P>Here is an example SFunc function: <PRE>     static void =
+SFunc(sqlite3_context *context, int argc, sqlite3_value **argv){
+       std::stringstream s;
+       std::string d;
+       double sum=3D0;
+       char *buf=3DNULL;
+       int i;
+
+       s.str("");
+
+       s &lt;&lt; "(";
+       d=3D"";
+       for(i=3D0; i &lt; argc; i++)
+         {
+       switch( sqlite3_value_type(argv[i]) ){
+         case SQLITE_INTEGER: {
+           sum+=3D(double) sqlite3_value_int64(argv[i]);
+           s &lt;&lt; d &lt;&lt; sum;
+           d=3D",";
+           break;
+         }
+         case SQLITE_NULL: {
+           s &lt;&lt; d &lt;&lt; "()";
+           d=3D",";
+           break;
+         }
+         default: {
+           sum+=3Dsqlite3_value_int64(argv[i]);
+           s &lt;&lt; d &lt;&lt;  sum;
+           d=3D",";
+           break;
+          }
+         }
+
+         }
+
+       s &lt;&lt; ")";
+       buf =3D (char *) malloc (sizeof(char)*(s.str().size()+2));
+       if (buf =3D=3D NULL)
+         fprintf(stderr,"malloc error in SNFunc, buf\n");
+       snprintf(buf,s.str().size()+1,"%s",s.str().c_str());
+       sqlite3_result_text(context,buf,s.str().size()+1,free );
+
+     }
+
+</PRE>
+      <P>Now, S works as both a simple function and an aggregate =
+function. The=20
+      simple function can go in any expression, but the aggregate only =
+works=20
+      after the select. Hence, this goes back to the power of the sign =
+function,=20
+      which is a simple function. <PRE>     ./myfuncpp DATABASE 'select =
+S(1,2,3,4)'
+     S(1,2,3,4) =3D (1,3,6,10)
+</PRE>
+      <P>For a few more examples, take a look at <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/myfuncpp.cc.html">myfuncpp=
+.cc</A>=20
+      in the <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/sqlite_examples.tar=
+.gz?download">download</A>.=20
+      There are some interesting functions there. For instance, there is =
+an I or=20
+      index function that works as follows: <PRE>         $ ./myfuncpp =
+DATABASE "select S(1,2,3)"
+         S(1,2,3) =3D (1,3,6)
+
+         $ ./myfuncpp DATABASE "select I(S(1,2,3),0)"
+         I(S(1,2,3),0) =3D 1
+
+         $ ./myfuncpp DATABASE "select I(S(1,2,3),1)"
+         I(S(1,2,3),1) =3D 3
+</PRE>
+      <P>, which takes the index in the list. The first index starts at =
+zero.=20
+      <H3>Reading Images (Blob data)</H3>
+      <P>First, a demonstration of how the program <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/eatblob.c.html">eatblob.c<=
+/A>=20
+      works. This program is a C API which inserts binary (blob) data =
+into a=20
+      table.=20
+      <P>The program can be run in two ways. First, script commands can =
+be=20
+      redirected into it. For example, you can create the following =
+script file=20
+      "sqlcommands": <PRE>      $ cat sqlcommands
+
+          create table blobtest (des varchar(80),b blob);
+              insert into blobtest (des,b)
+                       values ('A test file: test.png',?);
+              select * from  blobtest;
+</PRE>
+      <P>Note the "?" on the line "<CODE>values ('A test file:=20
+      test.png',?);</CODE>". This serves as a place holder for blob data =
+in the=20
+      SQL statement. Using this file, the program is executed as =
+follows: <PRE>      $ ./eatblob test3.db test.png &lt; sqlcommands
+</PRE>
+      <P>The image file "test.png" will be read into the program and =
+inserted=20
+      into the field b, since this is where the question mark is placed. =
+
+      <P>The program also works interactively, as follows: <PRE>      $ =
+./eatblob test.db test.png
+      eatblob:0&gt; create table blobtest2 (des varchar(30), b blob);
+      eatblob:0&gt; insert into blobtest2 (des,b) values ('A second =
+test: test.png',?);
+      eatblob:1&gt; insert into blobtest2 (des,b) values ('A third test: =
+test.png',?);
+      eatblob:2&gt; select * from blobtest2;
+      A second test: test.png
+      A third test: test.png
+      eatblob:2&gt; .q
+      [chirico@third-fl-71 sqlite_examples]$ ls outdata.*
+      outdata.0.png  outdata.1.png
+</PRE>
+      <P>The blob data is not shown. Instead, it is written to the file=20
+      outdata.n.png, where n is the record number.=20
+      <H3>Examining the C code in eatblob.c</H3>
+      <P>The program works by reading all of the binary data from the =
+filename=20
+      given as the third argument to the command. The complete file is =
+read into=20
+      memory. One way to do this is to get the total file size first, =
+then=20
+      allocate that amount of memory with malloc. That approach is not =
+taken=20
+      here. Instead, a more general approach is used. For instance, if =
+you were=20
+      to read data from a socket, you may not know beforehand how big =
+the file=20
+      will be. This general approach will take advantage of the=20
+      <CODE>realloc</CODE> function. The function in the program=20
+      <CODE>addmem</CODE> will give us a number. The number will be the =
+new=20
+      number of units to reallocate. We want to increase the amount of =
+memory in=20
+      a non-linear fashion to minimize the number of reallocations for =
+large=20
+      files. <PRE>          #define MULT_START     16384
+          #define MULT_INCREMENT 2
+          #define INIT_SIZE      1024
+
+          long memindx =3D MULT_START;
+          long memnext;
+...
+
+     1      long addmem(char **buf, long size)
+     2      {
+     3          memnext =3D (size &gt; 0) ? size + memindx: INIT_SIZE;
+     4          memindx =3D memindx * MULT_INCREMENT;
+     5          char *tbuf =3D realloc(*buf, memnext);
+     6          if (tbuf =3D=3D NULL) {
+     7                  fprintf(stderr, "Can't allocate memory in =
+addmem\n");
+     8                  return size;
+     9          } else {
+    10                  *buf =3D tbuf;
+    11                  return memnext;
+    12          }
+    13       }
+
+...
+</PRE>
+      <P>One line 3, the first time this function is called, the =
+variable size=20
+      is the current number of bytes allocated. If no memory has been =
+allocated=20
+      (size is 0), the new size will be INIT_SIZE. For this program, =
+INIT_SIZE=20
+      is set to 1024 in the define statement. However, if size is =
+greater than=20
+      zero, the new size will be the initial size plus memindx, which =
+starts at=20
+      1024. <PRE>    Call   memidx        Number Returned            =
+size
+      1     1024          1024 =3D     0 +   1024         0
+      2     2048          3072 =3D  1024 + (1024*2)    1024
+      3     4096          7168 =3D  3072 + (2048*2)    3072
+      4     8192         15360 =3D  7168 + (4096*2)    7168
+      5    16384         31744 =3D 15360 + (8192*2)   15360
+   ...
+</PRE>
+      <P>As you can see, the number returned increases exponentially. =
+"memindx"=20
+      is doubled each time this function is called. This doubled value =
+is added=20
+      to the size. <PRE>
+     1      long addmem(char **buf, long size)
+     2      {
+     3          memnext =3D (size &gt; 0) ? size + memindx: INIT_SIZE;
+     4          memindx =3D memindx * MULT_INCREMENT;
+     5          char *tbuf =3D realloc(*buf, memnext);
+     6          if (tbuf =3D=3D NULL) {
+     7                  fprintf(stderr, "Can't allocate memory in =
+addmem\n");
+     8                  return size;
+     9          } else {
+    10                  *buf =3D tbuf;
+    11                  return memnext;
+    12          }
+    13       }
+
+...
+</PRE>
+      <P>So, the function gives us a number that we can pass to realloc. =
+
+      <P>realloc works as follows: If realloc is successful, it will =
+copy the=20
+      contents pointed to by buf to a location of memory with the larger =
+size=20
+      memnext, then free the old region of memory. This new region of =
+memory=20
+      will be assigned to tbuf. Since the old location (the location =
+pointed to=20
+      by *buf) has been released, we need to assign the new value to =
+*buf ( *buf=20
+      =3D tbuf).=20
+      <P>If realloc cannot get the new size memnext, *buf is left =
+untouched and=20
+      tbuf will be null.=20
+      <P>Note that in the above program, buf is a pointer to a pointer, =
+*buf is=20
+      a pointer, and **buf is the first byte of data.=20
+      <H2>Perl and sqlite3</H2>
+      <P>To use Perl with sqlite3, DBI and DBD::SQLite must be =
+installed. To=20
+      install the packages from CPAN, use the following commands. <PRE>  =
+ # perl -MCPAN -e shell
+   cpan&gt; install DBI
+   cpan&gt; install DBD::SQLite
+</PRE>
+      <P>The following program will create a database and enter records: =
+<PRE>   #!/usr/bin/perl
+
+   use DBI;
+
+   $dbh =3D DBI-&gt;connect( "dbi:SQLite:data.dbl" ) || die "Cannot =
+connect: $DBI::errstr";
+
+   $dbh-&gt;do( "CREATE TABLE authors ( lastname, firstname )" );
+   $dbh-&gt;do( "INSERT INTO authors VALUES ( 'Conway', 'Damian' ) " );
+   $dbh-&gt;do( "INSERT INTO authors VALUES ( 'Booch', 'Grady' ) " );
+   $dbh-&gt;do( "CREATE TABLE books ( title, author )" );
+   $dbh-&gt;do( "INSERT INTO books VALUES ( 'Object Oriented Perl',
+                                             'Conway' ) " );
+   $dbh-&gt;do( "INSERT INTO books VALUES ( 'Object-Oriented Analysis =
+and Design',
+                                             'Booch' ) ");
+   $dbh-&gt;do( "INSERT INTO books VALUES ( 'Object Solutions', 'Booch' =
+) " );
+
+
+   $res =3D $dbh-&gt;selectall_arrayref( q( SELECT a.lastname, =
+a.firstname, b.title
+                                           FROM books b, authors a
+                                           WHERE b.title like '%Orient%'
+                                       AND a.lastname =3D b.author ) );
+
+   foreach( @$res ) {
+    foreach $i (0..$#$_) {
+       print "$_-&gt;[$i] "
+       }
+    print "\n";
+
+   }
+
+   $dbh-&gt;disconnect;
+
+</PRE>
+      <P>For a more elaborate Perl example that defines functions, see =
+<A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/code/perlExample.pl.html">perlE=
+xample.pl</A>=20
+      in the <A=20
+      =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/sqlite_examples.tar=
+.gz?download">download</A>.=20
+
+      <P>Also, consider using the Perl Debugger, for stepping through =
+complex=20
+      Perl sqlite programs where you are not sure of what is returned. =
+To get=20
+      into the Perl debugger, execute the following command, and to get =
+out of=20
+      the Perl Debugger type "q".=20
+      <P><PRE>   $ perl -de 42
+</PRE>
+      <P>
+      <H2>A Simple Everyday Application -- Keeping Notes in a =
+Database</H2>
+      <P>This simple bash <A=20
+      href=3D"http://souptonuts.sourceforge.net/code/n.html">script</A> =
+allows you=20
+      to take notes. The notes consist of a line of text followed by an =
+optional=20
+      category. It doesn't require you to type <CODE>"sqlite3 =
+&lt;database&gt;=20
+      &lt;sql statement&gt;"</CODE>. Instead, you just need a simple =
+one-letter=20
+      command: <PRE>     $ n 'Take a look at sqlite3 transactions -
+           http://www.sqlite.org/lang.html#transaction' 'sqlite3'
+</PRE>
+      <P>This enters the text into a notes table under the category =
+"sqlite3".=20
+      Whenever a second field appears, it is considered the category. To =
+extract=20
+      records for the day, enter "n -l" (which is similar to "l -l") to =
+"note=20
+      list".=20
+      <P>With just "n", help is listed for all the commands. <PRE>     $ =
+n
+     This command is used to list notes in
+     a database.
+
+     n &lt;option&gt;
+      -l list all notes
+      -t list notes for today
+      -c list categories
+      -f &lt;search string&gt; search for text
+      -e &lt;cmd&gt; execute command and add to notes
+      -d delete last entry
+</PRE>
+      <P>
+      <H2>Dirty Tricks</H2>
+      <P>This trick works on sqlite version 3.2.7 and all historical =
+versions.=20
+      However, it is not guaranteed to work on all future versions. =
+Still, this=20
+      is an interesting trick.=20
+      <P>Suppose you have two similar table structures and you want to =
+update=20
+      missing rows. This is easier to show with an example.=20
+      <P><PRE>     create table t0 (a int);
+     insert into t0 (a) values (2);
+
+     create table t1 (a int);
+     insert into t1 (a) values (1);
+     insert into t1 (a) values (2);
+     insert into t1 (a) values (3);    =20
+</PRE>
+      <P>Above when table t0 is compared to t1 values 1 and 3 are =
+missing. It is=20
+      possible to update these these rows as follows:=20
+      <P><PRE>    insert into t0 (a) select t1.a from t1 left join t0 on =
+t0.a=3Dt1.a where t0.a is NULL order by +t0.rowid;
+</PRE>
+      <P>Note above the plus sign in "+t0.rowid" so that you do not get =
+row=20
+      locking errors.=20
+      <P>
+      <H2>References</H2>
+      <DL>
+        <DT><A=20
+        =
+href=3D"http://souptonuts.sourceforge.net/how_to_linux_and_open_source.ht=
+m">Over=20
+        200 Linux Tips</A>=20
+        <DD>See TIP 50 on working with the libraries in C and C++. This =
+tip=20
+        details how to create dynamic and static libraries and make use =
+of the=20
+        -Wl and -R switches in gcc=20
+        <DT><A=20
+        =
+href=3D"http://prdownloads.sourceforge.net/souptonuts/Solving_Complex_SQL=
+_Problems.txt?download">Solving=20
+        Complex SQL Problems</A>=20
+        <DD>This is a list of examples using the sign function.=20
+        <DT><A =
+href=3D"http://www.sqlite.org/">http://www.sqlite.org/</A>=20
+        <DD>The homepage for the SQLite project.=20
+        <DT><A href=3D"http://freshmeat.net/articles/view/1270/">Lemon =
+Parser=20
+        Generator Tutorial</A>=20
+        <DD>A tutorial on the parser used with sqlite. </DD></DL>
+      <P></P></TD></TR></TBODY></TABLE><!-- BEGIN Other Tutorials -->
+<TABLE border=3D0 cellSpacing=3D5 cellPadding=3D5 width=3D"80%">
+  <TBODY>
+  <TR>
+    <TD>
+      <P><BR>
+      <H2>Other Tutorials</H2>
+      <P>
+      <P><A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/how_to_linux_and_open_source.ht=
+m">Linux=20
+      System Admin Tips</A>: There are over 200 Linux tips and tricks in =
+this=20
+      article. That is over 150 pages covering topics from setting and =
+keeping=20
+      the correct time on your computer, permanently deleting documents =
+with=20
+      shred, making files "immutable" so that root cannot change or =
+delete,=20
+      setting up more than one IP address on a single NIC, monitering =
+users and=20
+      processes, setting log rotate to monthly with 12 months of backups =
+in=20
+      compressed format, creating passwords for Apache using the =
+htpasswd=20
+      command, common Perl commands, using cfengine, adding users to =
+groups,=20
+      finding out which commands are aliased, query program text segment =
+size=20
+      and data segment size, trusted X11 forwarding, getting information =
+on the=20
+      hard drive including the current temperature, using Gnuplot, =
+POVRAY and=20
+      making animated GIFs, monitoring selective traffic with tcpdump =
+and=20
+      netstat, multiple examples using the find command, getting the =
+most from=20
+      Bash, plus a lot more. You can also down this article as a text =
+document=20
+      <A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/how_to_linux_and_open_source.ht=
+m">here</A>=20
+      for easy grepping.=20
+      <P>
+      <P><A =
+href=3D"http://souptonuts.sourceforge.net/quota_tutorial.html">Linux=20
+      Quota Tutorial</A>: This tutorial walks you through implementing =
+disk=20
+      quotas for both users and groups on Linux, using a virtual =
+filesystem,=20
+      which is a filesystem created from a disk file. Since quotas work =
+on a=20
+      per-filesystem basis, this is a way to implement quotas on a =
+sub-section,=20
+      or even multiple subsections of your drive, without reformatting. =
+This=20
+      tutorial also covers quotactl, or quota's C interface, by way of =
+an=20
+      example program that can store disk usage in a SQLite database for =
+
+      monitoring data usage over time.=20
+      <P>
+      <P><A =
+href=3D"http://souptonuts.sourceforge.net/sshtips.htm">Breaking=20
+      Firewalls with OpenSSH and PuTTY</A>: If the system administrator=20
+      deliberately filters out all traffic except port 22 (ssh), to a =
+single=20
+      server, it is very likely that you can still gain access other =
+computers=20
+      behind the firewall. This article shows how remote Linux and =
+Windows users=20
+      can gain access to firewalled samba, mail, and http servers. In =
+essence,=20
+      it shows how openSSH and Putty can be used as a VPN solution for =
+your home=20
+      or workplace.=20
+      <P><A href=3D"http://souptonuts.sourceforge.net/cdrom.htm">Create =
+a Live=20
+      Linux CD - BusyBox and OpenSSH Included </A>: These steps will =
+show you=20
+      how to create a functioning Linux system, with the latest 2.6 =
+kernel=20
+      compiled from source, and how to integrate the BusyBox utilities =
+including=20
+      the installation of DHCP. Plus, how to compile in the OpenSSH =
+package on=20
+      this CD based system. On system boot-up a filesystem will be =
+created and=20
+      the contents from the CD will be uncompressed and completely =
+loaded into=20
+      RAM -- the CD could be removed at this point for boot-up on a =
+second=20
+      computer. The remaining functioning system will have full ssh=20
+      capabilities. You can take over any PC assuming, of course, you =
+have=20
+      configured the kernel with the appropriate drivers and the PC can =
+boot=20
+      from a CD. This tutorial steps you through the whole processes.=20
+      <P>
+      <P><A=20
+      =
+href=3D"http://souptonuts.sourceforge.net/readme_lemon_tutorial.html">The=
+=20
+      Lemon Parser Tutorial</A>: This article explains how to build =
+grammars and=20
+      programs using the lemon parser, which is faster than yacc. And, =
+unlike=20
+      yacc, it is thread safe. </P>
+      <P><A =
+href=3D"http://ftp1.sourceforge.net/souptonuts/README_26.txt">How to=20
+      Compile the 2.6 kernel for Red Hat 9 and 8.0 and get Fedora =
+Updates</A>:=20
+      This is a step by step tutorial on how to compile the 2.6 kernel =
+from=20
+      source. </P>
+      <P><A=20
+      =
+href=3D"http://ftp1.sourceforge.net/souptonuts/README_Virtual_FS.html">Vi=
+rtual=20
+      Filesystem: Building A Linux Filesystem From An Ordinary File.</A> =
+You can=20
+      take a disk file, format it as ext2, ext3, or reiser filesystem =
+and then=20
+      mount it, just like a physical drive. Yes, it then possible to =
+read and=20
+      write files to this newly mounted device. You can also copy the =
+complete=20
+      filesystem, sinc\ e it is just a file, to another computer. If =
+security is=20
+      an issue, read on. This article will show you how to encrypt the=20
+      filesystem, and mount it with ACL (Access Control Lists), which =
+give you=20
+      rights beyond the traditional read (r) write (w) and execute (x) =
+for the 3=20
+      user groups file, owner and other. </P>
+      <P><A=20
+      =
+href=3D"http://ftp1.sourceforge.net/souptonuts/README_Working_With_Time.h=
+tml">Working=20
+      With Time</A>: What? There are 61 seconds in a minute? We can go =
+back in=20
+      time? We still tell time by the sun? </P>
+      <P></P></TD></TR></TBODY></TABLE><!-- *** BEGIN bio *** -->
+<HR>
+
+<P><IMG border=3D0 alt=3D"Chirico img"=20
+src=3D"http://souptonuts.sourceforge.net/chirico/pgstats/pgtrack.php?read=
+me_sqlite_tutorial.html">=20
+<EM>Mike Chirico, a father of triplets (all girls) lives outside of=20
+Philadelphia, PA, USA. He has worked with Linux since 1996, has a =
+Masters in=20
+Computer Science and Mathematics from Villanova University, and has =
+worked in=20
+computer-related jobs from Wall Street to the University of =
+Pennsylvania. His=20
+hero is Paul Erdos, a brilliant number theorist who was known for his =
+open=20
+collaboration with others.=20
+<P><BR>Mike's notes page is <A=20
+href=3D"http://souptonuts.sourceforge.net/chirico/index.php">souptonuts</=
+A>. For=20
+open source consulting needs, please send an email to <A=20
+href=3D"mailto:mchirico@gmail.com?subject=3DOpen Source Consulting =
+Needs">mailto:mchirico@gmail.com?subject=3DOpen=20
+Source Consulting Needs</A>. All consulting work must include a donation =
+to=20
+SourceForge.net. </EM><BR><!-- *** END bio *** --><BR><A=20
+href=3D"http://sourceforge.net/"><IMG border=3D0 alt=3D"SourceForge.net =
+Logo"=20
+src=3D"http://sourceforge.net/sflogo.php?group_id=3D79320&amp;type=3D5" =
+width=3D210=20
+height=3D62></A>
+<SCRIPT type=3Dtext/javascript=20
+src=3D"http://www.google-analytics.com/urchin.js">=0A=
+</SCRIPT>
+
+<SCRIPT=20
+type=3Dtext/javascript>=0A=
+_uacct =3D "UA-3115310-2";=0A=
+urchinTracker();=0A=
+</SCRIPT>
+ </P></BODY></HTML>
+
+------=_NextPart_000_0000_01CB278C.49520D90
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Location: http://sourceforge.net/sflogo.php?group_id=79320&type=5
+
+iVBORw0KGgoAAAANSUhEUgAAANIAAAA+CAMAAABpwbWJAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ
+bWFnZVJlYWR5ccllPAAAAFRQTFRF////anR87vDz2tzetLm9j5ed9vb3c32E7O7v4+XmfYWMx8vO
+oqit0NPWho6VmaClq7G2vsLF624f+tvH/vbx9baP7Hct/O3j74lJ++TV9r+d7oA7/egzKwAAA9tJ
+REFUaN7tm8t65CgMhc+JJLDB10rSPTP9/u/ZC66uVCXds8wHq8KyBT9IB7EovHy7hhd8szaQBtJA
+GkgDaSANpIE0kAbSQBpIA2kgDaSBNJD+F9J0qmqc0DrnnDoi+SlEJkwiIiJzdbCqqq4OcCLVJrUl
+f7G8BBQPzUWyxqmztTExi4gDkn/XveHazzxO/iohuYWpLQAmyx0TACA1eycVmm0hAgDUp65XCMtn
+AGsDMBd/PBxQPdAcLtZtbbY6Jix5BISkdG9I+0kSmLdD7ahIBxkWNXIBZk/6XZdAMj5C2syM5Ao4
+I2maPpRkMTuuSLEbeHMdEjdcrfoMiesfINnpN92lIJE7ADgVTJ5UBwCnJ9cHSAJgJgOwkPsEAG5x
+kGTJbzKoqqpiTrsfT8sUSnLRgyRnrCTJXfUIDMWmqioXJO96pOR5ElXVMhJgsuku2pDqquzkWXKH
+DE+QYCQkr0R9u0ey5o9+RgoFMkJJSupFhBqAiCuKrW9WEqIh9eY2kkng3JA8/ZpztU0GWMj1CdJG
+Yienr5BciZtMt5dpK8m4kgyu+XiKRPka6bRza4EXqxisKYHqLPUxUiQ3+I4eEPIsWlUDD0IyFPEi
+SSjJU6Iv6RBxRdrMzOYeyZMMriGZmdkHpDt5QPQZSi/LRNpDedhICpJAdkg1sVvWCru3KlJWTSx3
+u1Jt0iPZQVLv5OFjiF9FHHDqSR4fkPYnIu5jAr4gbWZm8U+Rwoyjzn42s/gMyQWS55dIH6oHpz5F
+99mO0YeBd0ogHYBQQ+pBLj0IPCHpoST3/FQrsFQRP6UcrhUpfVmR2hn+BRIwe5pjN889hZfWTM+5
+tCapW2rif6J4ZF0ka/Jg6emapPyC1Dbo9fUtIyW1/Fwe7pCmMqZhaYESyQ3w3Go35sDcyRWQdGB8
+jrQwS0CqUMo658Mm5Bh+hPTP7fbrLSO57S+RnN+ntEs7nM/np9O0gkveptmTU0Zynt6loiPNQJ4i
+OU+Smx6BJPci1EbyKJqSKpeMVEqQ19vtdvsvI+UTu1M8i58inclTWqI51J5fM0o4NM+hiXgOPQYz
+C1xbjcfrQLNvZYu5gjSR5JSl9kFBZAnpvSAlk3womZ7uUg7VdN66Iw+zTOgLS69AXz2sAGTLtvMp
+Etzi+1I3B9eS9gzTwlYJ90hvP263Hz8rEra/QgKc9HUV5FTtVGc+VXUtV4NS6ifgaVU9Bd3lQoDL
+9QOAqGrMT6YkaK7JlpyqKtfLxQz8fH//F5iLq+nucjHls+g60rjVDqSBNJAG0kAaSANpIA2kgTSQ
+BtJAGkgDaSANJLzg+/2N5DdrxSMWOnzEcAAAAABJRU5ErkJggg==
+
+------=_NextPart_000_0000_01CB278C.49520D90
+Content-Type: application/x-js
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://www.google-analytics.com/urchin.js
+
+//-- Google Analytics Urchin Module=0A=
+//-- Copyright 2007 Google, All Rights Reserved.=0A=
+=0A=
+//-- Urchin On Demand Settings ONLY=0A=
+var _uacct=3D"";			// set up the Urchin Account=0A=
+var _userv=3D1;			// service mode (0=3Dlocal,1=3Dremote,2=3Dboth)=0A=
+=0A=
+//-- UTM User Settings=0A=
+var _ufsc=3D1;			// set client info flag (1=3Don|0=3Doff)=0A=
+var _udn=3D"auto";		// (auto|none|domain) set the domain name for cookies=0A=
+var _uhash=3D"on";		// (on|off) unique domain hash for cookies=0A=
+var _utimeout=3D"1800";   	// set the inactive session timeout in seconds=0A=
+var _ugifpath=3D"/__utm.gif";	// set the web path to the __utm.gif file=0A=
+var _utsp=3D"|";			// transaction field separator=0A=
+var _uflash=3D1;			// set flash version detect option (1=3Don|0=3Doff)=0A=
+var _utitle=3D1;			// set the document title detect option =
+(1=3Don|0=3Doff)=0A=
+var _ulink=3D0;			// enable linker functionality (1=3Don|0=3Doff)=0A=
+var _uanchor=3D0;			// enable use of anchors for campaign =
+(1=3Don|0=3Doff)=0A=
+var _utcp=3D"/";			// the cookie path for tracking=0A=
+var _usample=3D100;		// The sampling % of visitors to track (1-100).=0A=
+=0A=
+//-- UTM Campaign Tracking Settings=0A=
+var _uctm=3D1;			// set campaign tracking module (1=3Don|0=3Doff)=0A=
+var _ucto=3D"15768000";		// set timeout in seconds (6 month default)=0A=
+var _uccn=3D"utm_campaign";	// name=0A=
+var _ucmd=3D"utm_medium";		// medium (cpc|cpm|link|email|organic)=0A=
+var _ucsr=3D"utm_source";		// source=0A=
+var _uctr=3D"utm_term";		// term/keyword=0A=
+var _ucct=3D"utm_content";	// content=0A=
+var _ucid=3D"utm_id";		// id number=0A=
+var _ucno=3D"utm_nooverride";	// don't override=0A=
+=0A=
+//-- Auto/Organic Sources and Keywords=0A=
+var _uOsr=3Dnew Array();=0A=
+var _uOkw=3Dnew Array();=0A=
+_uOsr[0]=3D"google";	_uOkw[0]=3D"q";=0A=
+_uOsr[1]=3D"yahoo";	_uOkw[1]=3D"p";=0A=
+_uOsr[2]=3D"msn";		_uOkw[2]=3D"q";=0A=
+_uOsr[3]=3D"aol";		_uOkw[3]=3D"query";=0A=
+_uOsr[4]=3D"aol";		_uOkw[4]=3D"encquery";=0A=
+_uOsr[5]=3D"lycos";	_uOkw[5]=3D"query";=0A=
+_uOsr[6]=3D"ask";		_uOkw[6]=3D"q";=0A=
+_uOsr[7]=3D"altavista";	_uOkw[7]=3D"q";=0A=
+_uOsr[8]=3D"netscape";	_uOkw[8]=3D"query";=0A=
+_uOsr[9]=3D"cnn";	_uOkw[9]=3D"query";=0A=
+_uOsr[10]=3D"looksmart";	_uOkw[10]=3D"qt";=0A=
+_uOsr[11]=3D"about";	_uOkw[11]=3D"terms";=0A=
+_uOsr[12]=3D"mamma";	_uOkw[12]=3D"query";=0A=
+_uOsr[13]=3D"alltheweb";	_uOkw[13]=3D"q";=0A=
+_uOsr[14]=3D"gigablast";	_uOkw[14]=3D"q";=0A=
+_uOsr[15]=3D"voila";	_uOkw[15]=3D"rdata";=0A=
+_uOsr[16]=3D"virgilio";	_uOkw[16]=3D"qs";=0A=
+_uOsr[17]=3D"live";	_uOkw[17]=3D"q";=0A=
+_uOsr[18]=3D"baidu";	_uOkw[18]=3D"wd";=0A=
+_uOsr[19]=3D"alice";	_uOkw[19]=3D"qs";=0A=
+_uOsr[20]=3D"yandex";	_uOkw[20]=3D"text";=0A=
+_uOsr[21]=3D"najdi";	_uOkw[21]=3D"q";=0A=
+_uOsr[22]=3D"aol";	_uOkw[22]=3D"q";=0A=
+_uOsr[23]=3D"club-internet"; _uOkw[23]=3D"query";=0A=
+_uOsr[24]=3D"mama";	_uOkw[24]=3D"query";=0A=
+_uOsr[25]=3D"seznam";	_uOkw[25]=3D"q";=0A=
+_uOsr[26]=3D"search";	_uOkw[26]=3D"q";=0A=
+_uOsr[27]=3D"wp";	_uOkw[27]=3D"szukaj";=0A=
+_uOsr[28]=3D"onet";	_uOkw[28]=3D"qt";=0A=
+_uOsr[29]=3D"netsprint";	_uOkw[29]=3D"q";=0A=
+_uOsr[30]=3D"google.interia";	_uOkw[30]=3D"q";=0A=
+_uOsr[31]=3D"szukacz";	_uOkw[31]=3D"q";=0A=
+_uOsr[32]=3D"yam";	_uOkw[32]=3D"k";=0A=
+_uOsr[33]=3D"pchome";	_uOkw[33]=3D"q";=0A=
+_uOsr[34]=3D"kvasir";	_uOkw[34]=3D"searchExpr";=0A=
+_uOsr[35]=3D"sesam";	_uOkw[35]=3D"q";=0A=
+_uOsr[36]=3D"ozu"; _uOkw[36]=3D"q";=0A=
+_uOsr[37]=3D"terra"; _uOkw[37]=3D"query";=0A=
+_uOsr[38]=3D"nostrum"; _uOkw[38]=3D"query";=0A=
+_uOsr[39]=3D"mynet"; _uOkw[39]=3D"q";=0A=
+_uOsr[40]=3D"ekolay"; _uOkw[40]=3D"q";=0A=
+_uOsr[41]=3D"search.ilse"; _uOkw[41]=3D"search_for";=0A=
+_uOsr[42]=3D"bing"; _uOkw[42]=3D"q";=0A=
+=0A=
+//-- Auto/Organic Keywords to Ignore=0A=
+var _uOno=3Dnew Array();=0A=
+//_uOno[0]=3D"urchin";=0A=
+//_uOno[1]=3D"urchin.com";=0A=
+//_uOno[2]=3D"www.urchin.com";=0A=
+=0A=
+//-- Referral domains to Ignore=0A=
+var _uRno=3Dnew Array();=0A=
+//_uRno[0]=3D".urchin.com";=0A=
+=0A=
+//-- **** Don't modify below this point ***=0A=
+var =
+_uff,_udh,_udt,_ubl=3D0,_udo=3D"",_uu,_ufns=3D0,_uns=3D0,_ur=3D"-",_ufno=3D=
+0,_ust=3D0,_ubd=3Ddocument,_udl=3D_ubd.location,_udlh=3D"",_uwv=3D"1.3";=0A=
+var _ugifpath2=3D"http://www.google-analytics.com/__utm.gif";=0A=
+if (_udl.hash) _udlh=3D_udl.href.substring(_udl.href.indexOf('#'));=0A=
+if (_udl.protocol=3D=3D"https:") =
+_ugifpath2=3D"https://ssl.google-analytics.com/__utm.gif";=0A=
+if (!_utcp || _utcp=3D=3D"") _utcp=3D"/";=0A=
+function urchinTracker(page) {=0A=
+ if (_udl.protocol=3D=3D"file:") return;=0A=
+ if (_uff && (!page || page=3D=3D"")) return;=0A=
+ var a,b,c,xx,v,z,k,x=3D"",s=3D"",f=3D0,nv=3D0;=0A=
+ var nx=3D" expires=3D"+_uNx()+";";=0A=
+ var dc=3D_ubd.cookie;=0A=
+ _udh=3D_uDomain();=0A=
+ if (!_uVG()) return;=0A=
+ _uu=3DMath.round(Math.random()*2147483647);=0A=
+ _udt=3Dnew Date();=0A=
+ _ust=3DMath.round(_udt.getTime()/1000);=0A=
+ a=3Ddc.indexOf("__utma=3D"+_udh+".");=0A=
+ b=3Ddc.indexOf("__utmb=3D"+_udh);=0A=
+ c=3Ddc.indexOf("__utmc=3D"+_udh);=0A=
+ if (_udn && _udn!=3D"") { _udo=3D" domain=3D"+_udn+";"; }=0A=
+ if (_utimeout && _utimeout!=3D"") {=0A=
+  x=3Dnew Date(_udt.getTime()+(_utimeout*1000));=0A=
+  x=3D" expires=3D"+x.toGMTString()+";";=0A=
+ }=0A=
+ if (_ulink) {=0A=
+  if (_uanchor && _udlh && _udlh!=3D"") s=3D_udlh+"&";=0A=
+  s+=3D_udl.search;=0A=
+  if(s && s!=3D"" && s.indexOf("__utma=3D")>=3D0) {=0A=
+   if (!(_uIN(a=3D_uGC(s,"__utma=3D","&")))) a=3D"-";=0A=
+   if (!(_uIN(b=3D_uGC(s,"__utmb=3D","&")))) b=3D"-";=0A=
+   if (!(_uIN(c=3D_uGC(s,"__utmc=3D","&")))) c=3D"-";=0A=
+   v=3D_uGC(s,"__utmv=3D","&");=0A=
+   z=3D_uGC(s,"__utmz=3D","&");=0A=
+   k=3D_uGC(s,"__utmk=3D","&");=0A=
+   xx=3D_uGC(s,"__utmx=3D","&");=0A=
+   if ((k*1) !=3D ((_uHash(a+b+c+xx+z+v)*1)+(_udh*1))) =
+{_ubl=3D1;a=3D"-";b=3D"-";c=3D"-";xx=3D"-";z=3D"-";v=3D"-";}=0A=
+   if (a!=3D"-" && b!=3D"-" && c!=3D"-") f=3D1;=0A=
+   else if(a!=3D"-") f=3D2;=0A=
+  }=0A=
+ }=0A=
+ if(f=3D=3D1) {=0A=
+  _ubd.cookie=3D"__utma=3D"+a+"; path=3D"+_utcp+";"+nx+_udo;=0A=
+  _ubd.cookie=3D"__utmb=3D"+b+"; path=3D"+_utcp+";"+x+_udo;=0A=
+  _ubd.cookie=3D"__utmc=3D"+c+"; path=3D"+_utcp+";"+_udo;=0A=
+ } else if (f=3D=3D2) {=0A=
+  a=3D_uFixA(s,"&",_ust);=0A=
+  _ubd.cookie=3D"__utma=3D"+a+"; path=3D"+_utcp+";"+nx+_udo;=0A=
+  _ubd.cookie=3D"__utmb=3D"+_udh+"; path=3D"+_utcp+";"+x+_udo;=0A=
+  _ubd.cookie=3D"__utmc=3D"+_udh+"; path=3D"+_utcp+";"+_udo;=0A=
+  _ufns=3D1;=0A=
+ } else if (a>=3D0 && b>=3D0 && c>=3D0) {=0A=
+   b =3D _uGC(dc,"__utmb=3D"+_udh,";");=0A=
+   b =3D ("-" =3D=3D b) ? _udh : b;  =0A=
+  _ubd.cookie=3D"__utmb=3D"+b+"; path=3D"+_utcp+";"+x+_udo;=0A=
+ } else {=0A=
+  if (a>=3D0) a=3D_uFixA(_ubd.cookie,";",_ust);=0A=
+  else {=0A=
+   a=3D_udh+"."+_uu+"."+_ust+"."+_ust+"."+_ust+".1";=0A=
+   nv=3D1;=0A=
+  }=0A=
+  _ubd.cookie=3D"__utma=3D"+a+"; path=3D"+_utcp+";"+nx+_udo;=0A=
+  _ubd.cookie=3D"__utmb=3D"+_udh+"; path=3D"+_utcp+";"+x+_udo;=0A=
+  _ubd.cookie=3D"__utmc=3D"+_udh+"; path=3D"+_utcp+";"+_udo;=0A=
+  _ufns=3D1;=0A=
+ }=0A=
+ if (_ulink && xx && xx!=3D"" && xx!=3D"-") {=0A=
+   xx=3D_uUES(xx);=0A=
+   if (xx.indexOf(";")=3D=3D-1) _ubd.cookie=3D"__utmx=3D"+xx+"; =
+path=3D"+_utcp+";"+nx+_udo;=0A=
+ }=0A=
+ if (_ulink && v && v!=3D"" && v!=3D"-") {=0A=
+  v=3D_uUES(v);=0A=
+  if (v.indexOf(";")=3D=3D-1) _ubd.cookie=3D"__utmv=3D"+v+"; =
+path=3D"+_utcp+";"+nx+_udo;=0A=
+ }=0A=
+ var wc=3Dwindow;=0A=
+ var c=3D_ubd.cookie;=0A=
+ if(wc && wc.gaGlobal && wc.gaGlobal.dh=3D=3D_udh){=0A=
+  var g=3Dwc.gaGlobal;=0A=
+  var ua=3Dc.split("__utma=3D"+_udh+".")[1].split(";")[0].split(".");=0A=
+  if(g.sid)ua[3]=3Dg.sid;=0A=
+  if(nv>0){=0A=
+   ua[2]=3Dua[3];=0A=
+   if(g.vid){=0A=
+    var v=3Dg.vid.split(".");=0A=
+    ua[0]=3Dv[0];=0A=
+    ua[1]=3Dv[1];=0A=
+   }=0A=
+  }=0A=
+  _ubd.cookie=3D"__utma=3D"+_udh+"."+ua.join(".")+"; =
+path=3D"+_utcp+";"+nx+_udo;=0A=
+ }=0A=
+ _uInfo(page);=0A=
+ _ufns=3D0;=0A=
+ _ufno=3D0;=0A=
+ if (!page || page=3D=3D"") _uff=3D1;=0A=
+}=0A=
+function _uGH() {=0A=
+ var hid;=0A=
+ var wc=3Dwindow;=0A=
+ if (wc && wc.gaGlobal && wc.gaGlobal.hid) {=0A=
+  hid=3Dwc.gaGlobal.hid;=0A=
+ } else {=0A=
+  hid=3DMath.round(Math.random()*0x7fffffff);=0A=
+  if (!wc.gaGlobal) wc.gaGlobal=3D{};=0A=
+  wc.gaGlobal.hid=3Dhid;=0A=
+ }=0A=
+ return hid;=0A=
+}=0A=
+function _uInfo(page) {=0A=
+ var p,s=3D"",dm=3D"",pg=3D_udl.pathname+_udl.search;=0A=
+ if (page && page!=3D"") pg=3D_uES(page,1);=0A=
+ _ur=3D_ubd.referrer;=0A=
+ if (!_ur || _ur=3D=3D"") { _ur=3D"-"; }=0A=
+ else {=0A=
+  dm=3D_ubd.domain;=0A=
+  if(_utcp && _utcp!=3D"/") dm+=3D_utcp;=0A=
+  p=3D_ur.indexOf(dm);=0A=
+  if ((p>=3D0) && (p<=3D8)) { _ur=3D"0"; }=0A=
+  if (_ur.indexOf("[")=3D=3D0 && =
+_ur.lastIndexOf("]")=3D=3D(_ur.length-1)) { _ur=3D"-"; }=0A=
+ }=0A=
+ s+=3D"&utmn=3D"+_uu;=0A=
+ if (_ufsc) s+=3D_uBInfo();=0A=
+ if (_uctm) s+=3D_uCInfo();=0A=
+ if (_utitle && _ubd.title && _ubd.title!=3D"") =
+s+=3D"&utmdt=3D"+_uES(_ubd.title);=0A=
+ if (_udl.hostname && _udl.hostname!=3D"") =
+s+=3D"&utmhn=3D"+_uES(_udl.hostname);=0A=
+ if (_usample && _usample !=3D 100) s+=3D"&utmsp=3D"+_uES(_usample);=0A=
+ s+=3D"&utmhid=3D"+_uGH();=0A=
+ s+=3D"&utmr=3D"+_ur;=0A=
+ s+=3D"&utmp=3D"+pg;=0A=
+ if ((_userv=3D=3D0 || _userv=3D=3D2) && _uSP()) {=0A=
+  var i=3Dnew Image(1,1);=0A=
+  i.src=3D_ugifpath+"?"+"utmwv=3D"+_uwv+s;=0A=
+  i.onload=3Dfunction() { _uVoid(); }=0A=
+ }=0A=
+ if ((_userv=3D=3D1 || _userv=3D=3D2) && _uSP()) {=0A=
+  var i2=3Dnew Image(1,1);=0A=
+  =
+i2.src=3D_ugifpath2+"?"+"utmwv=3D"+_uwv+s+"&utmac=3D"+_uacct+"&utmcc=3D"+=
+_uGCS();=0A=
+  i2.onload=3Dfunction() { _uVoid(); }=0A=
+ }=0A=
+ return;=0A=
+}=0A=
+function _uVoid() { return; }=0A=
+function _uCInfo() {=0A=
+ if (!_ucto || _ucto=3D=3D"") { _ucto=3D"15768000"; }=0A=
+ if (!_uVG()) return;=0A=
+ var =
+c=3D"",t=3D"-",t2=3D"-",t3=3D"-",o=3D0,cs=3D0,cn=3D0,i=3D0,z=3D"-",s=3D""=
+;=0A=
+ if (_uanchor && _udlh && _udlh!=3D"") s=3D_udlh+"&";=0A=
+ s+=3D_udl.search;=0A=
+ var x=3Dnew Date(_udt.getTime()+(_ucto*1000));=0A=
+ var dc=3D_ubd.cookie;=0A=
+ x=3D" expires=3D"+x.toGMTString()+";";=0A=
+ if (_ulink && !_ubl) {=0A=
+  z=3D_uUES(_uGC(s,"__utmz=3D","&"));=0A=
+  if (z!=3D"-" && z.indexOf(";")=3D=3D-1) { =
+_ubd.cookie=3D"__utmz=3D"+z+"; path=3D"+_utcp+";"+x+_udo; return ""; }=0A=
+ }=0A=
+ z=3Ddc.indexOf("__utmz=3D"+_udh+".");=0A=
+ if (z>-1) { z=3D_uGC(dc,"__utmz=3D"+_udh+".",";"); }=0A=
+ else { z=3D"-"; }=0A=
+ t=3D_uGC(s,_ucid+"=3D","&");=0A=
+ t2=3D_uGC(s,_ucsr+"=3D","&");=0A=
+ t3=3D_uGC(s,"gclid=3D","&");=0A=
+ if ((t!=3D"-" && t!=3D"") || (t2!=3D"-" && t2!=3D"") || (t3!=3D"-" && =
+t3!=3D"")) {=0A=
+  if (t!=3D"-" && t!=3D"") c+=3D"utmcid=3D"+_uEC(t);=0A=
+  if (t2!=3D"-" && t2!=3D"") { if (c !=3D "") c+=3D"|"; =
+c+=3D"utmcsr=3D"+_uEC(t2); }=0A=
+  if (t3!=3D"-" && t3!=3D"") { if (c !=3D "") c+=3D"|"; =
+c+=3D"utmgclid=3D"+_uEC(t3); }=0A=
+  t=3D_uGC(s,_uccn+"=3D","&");=0A=
+  if (t!=3D"-" && t!=3D"") c+=3D"|utmccn=3D"+_uEC(t);=0A=
+  else c+=3D"|utmccn=3D(not+set)";=0A=
+  t=3D_uGC(s,_ucmd+"=3D","&");=0A=
+  if (t!=3D"-" && t!=3D"") c+=3D"|utmcmd=3D"+_uEC(t);=0A=
+  else  c+=3D"|utmcmd=3D(not+set)";=0A=
+  t=3D_uGC(s,_uctr+"=3D","&");=0A=
+  if (t!=3D"-" && t!=3D"") c+=3D"|utmctr=3D"+_uEC(t);=0A=
+  else { t=3D_uOrg(1); if (t!=3D"-" && t!=3D"") =
+c+=3D"|utmctr=3D"+_uEC(t); }=0A=
+  t=3D_uGC(s,_ucct+"=3D","&");=0A=
+  if (t!=3D"-" && t!=3D"") c+=3D"|utmcct=3D"+_uEC(t);=0A=
+  t=3D_uGC(s,_ucno+"=3D","&");=0A=
+  if (t=3D=3D"1") o=3D1;=0A=
+  if (z!=3D"-" && o=3D=3D1) return "";=0A=
+ }=0A=
+ if (c=3D=3D"-" || c=3D=3D"") { c=3D_uOrg(); if (z!=3D"-" && =
+_ufno=3D=3D1)  return ""; }=0A=
+ if (c=3D=3D"-" || c=3D=3D"") { if (_ufns=3D=3D1)  c=3D_uRef(); if =
+(z!=3D"-" && _ufno=3D=3D1)  return ""; }=0A=
+ if (c=3D=3D"-" || c=3D=3D"") {=0A=
+  if (z=3D=3D"-" && _ufns=3D=3D1) { =
+c=3D"utmccn=3D(direct)|utmcsr=3D(direct)|utmcmd=3D(none)"; }=0A=
+  if (c=3D=3D"-" || c=3D=3D"") return "";=0A=
+ }=0A=
+ if (z!=3D"-") {=0A=
+  i=3Dz.indexOf(".");=0A=
+  if (i>-1) i=3Dz.indexOf(".",i+1);=0A=
+  if (i>-1) i=3Dz.indexOf(".",i+1);=0A=
+  if (i>-1) i=3Dz.indexOf(".",i+1);=0A=
+  t=3Dz.substring(i+1,z.length);=0A=
+  if (t.toLowerCase()=3D=3Dc.toLowerCase()) cs=3D1;=0A=
+  t=3Dz.substring(0,i);=0A=
+  if ((i=3Dt.lastIndexOf(".")) > -1) {=0A=
+   t=3Dt.substring(i+1,t.length);=0A=
+   cn=3D(t*1);=0A=
+  }=0A=
+ }=0A=
+ if (cs=3D=3D0 || _ufns=3D=3D1) {=0A=
+  t=3D_uGC(dc,"__utma=3D"+_udh+".",";");=0A=
+  if ((i=3Dt.lastIndexOf(".")) > 9) {=0A=
+   _uns=3Dt.substring(i+1,t.length);=0A=
+   _uns=3D(_uns*1);=0A=
+  }=0A=
+  cn++;=0A=
+  if (_uns=3D=3D0) _uns=3D1;=0A=
+  _ubd.cookie=3D"__utmz=3D"+_udh+"."+_ust+"."+_uns+"."+cn+"."+c+"; =
+path=3D"+_utcp+"; "+x+_udo;=0A=
+ }=0A=
+ if (cs=3D=3D0 || _ufns=3D=3D1) return "&utmcn=3D1";=0A=
+ else return "&utmcr=3D1";=0A=
+}=0A=
+function _uRef() {=0A=
+ if (_ur=3D=3D"0" || _ur=3D=3D"" || _ur=3D=3D"-") return "";=0A=
+ var i=3D0,h,k,n;=0A=
+ if ((i=3D_ur.indexOf("://"))<0 || _uGCse()) return "";=0A=
+ h=3D_ur.substring(i+3,_ur.length);=0A=
+ if (h.indexOf("/") > -1) {=0A=
+  k=3Dh.substring(h.indexOf("/"),h.length);=0A=
+  if (k.indexOf("?") > -1) k=3Dk.substring(0,k.indexOf("?"));=0A=
+  h=3Dh.substring(0,h.indexOf("/"));=0A=
+ }=0A=
+ h=3Dh.toLowerCase();=0A=
+ n=3Dh;=0A=
+ if ((i=3Dn.indexOf(":")) > -1) n=3Dn.substring(0,i);=0A=
+ for (var ii=3D0;ii<_uRno.length;ii++) {=0A=
+  if ((i=3Dn.indexOf(_uRno[ii].toLowerCase())) > -1 && =
+n.length=3D=3D(i+_uRno[ii].length)) { _ufno=3D1; break; }=0A=
+ }=0A=
+ if (h.indexOf("www.")=3D=3D0) h=3Dh.substring(4,h.length);=0A=
+ return =
+"utmccn=3D(referral)|utmcsr=3D"+_uEC(h)+"|"+"utmcct=3D"+_uEC(k)+"|utmcmd=3D=
+referral";=0A=
+}=0A=
+function _uOrg(t) {=0A=
+ if (_ur=3D=3D"0" || _ur=3D=3D"" || _ur=3D=3D"-") return "";=0A=
+ var i=3D0,h,k;=0A=
+ if ((i=3D_ur.indexOf("://"))<0 || _uGCse()) return "";=0A=
+ h=3D_ur.substring(i+3,_ur.length);=0A=
+ if (h.indexOf("/") > -1) {=0A=
+  h=3Dh.substring(0,h.indexOf("/"));=0A=
+ }=0A=
+ for (var ii=3D0;ii<_uOsr.length;ii++) {=0A=
+  if (h.toLowerCase().indexOf(_uOsr[ii].toLowerCase()) > -1) {=0A=
+   if ((i=3D_ur.indexOf("?"+_uOkw[ii]+"=3D")) > -1 || =
+(i=3D_ur.indexOf("&"+_uOkw[ii]+"=3D")) > -1) {=0A=
+    k=3D_ur.substring(i+_uOkw[ii].length+2,_ur.length);=0A=
+    if ((i=3Dk.indexOf("&")) > -1) k=3Dk.substring(0,i);=0A=
+    for (var yy=3D0;yy<_uOno.length;yy++) {=0A=
+     if (_uOno[yy].toLowerCase()=3D=3Dk.toLowerCase()) { _ufno=3D1; =
+break; }=0A=
+    }=0A=
+    if (t) return _uEC(k);=0A=
+    else return =
+"utmccn=3D(organic)|utmcsr=3D"+_uEC(_uOsr[ii])+"|"+"utmctr=3D"+_uEC(k)+"|=
+utmcmd=3Dorganic";=0A=
+   }=0A=
+  }=0A=
+ }=0A=
+ return "";=0A=
+}=0A=
+function _uGCse() {=0A=
+ var h,p;=0A=
+ h=3Dp=3D_ur.split("://")[1];=0A=
+ if(h.indexOf("/")>-1) {=0A=
+  h=3Dh.split("/")[0];=0A=
+  p=3Dp.substring(p.indexOf("/")+1,p.length);=0A=
+ }=0A=
+ if(p.indexOf("?")>-1) {=0A=
+  p=3Dp.split("?")[0];=0A=
+ }=0A=
+ if(h.toLowerCase().indexOf("google")>-1) {=0A=
+  if(_ur.indexOf("?q=3D")>-1 || _ur.indexOf("&q=3D")>-1) {=0A=
+   if (p.toLowerCase().indexOf("cse")>-1) {=0A=
+    return true;=0A=
+   }=0A=
+  }=0A=
+ }=0A=
+}=0A=
+function _uBInfo() {=0A=
+ var sr=3D"-",sc=3D"-",ul=3D"-",fl=3D"-",cs=3D"-",je=3D1;=0A=
+ var n=3Dnavigator;=0A=
+ if (self.screen) {=0A=
+  sr=3Dscreen.width+"x"+screen.height;=0A=
+  sc=3Dscreen.colorDepth+"-bit";=0A=
+ } else if (self.java) {=0A=
+  var j=3Djava.awt.Toolkit.getDefaultToolkit();=0A=
+  var s=3Dj.getScreenSize();=0A=
+  sr=3Ds.width+"x"+s.height;=0A=
+ }=0A=
+ if (n.language) { ul=3Dn.language.toLowerCase(); }=0A=
+ else if (n.browserLanguage) { ul=3Dn.browserLanguage.toLowerCase(); }=0A=
+ je=3Dn.javaEnabled()?1:0;=0A=
+ if (_uflash) fl=3D_uFlash();=0A=
+ if (_ubd.characterSet) cs=3D_uES(_ubd.characterSet);=0A=
+ else if (_ubd.charset) cs=3D_uES(_ubd.charset);=0A=
+ return =
+"&utmcs=3D"+cs+"&utmsr=3D"+sr+"&utmsc=3D"+sc+"&utmul=3D"+ul+"&utmje=3D"+j=
+e+"&utmfl=3D"+fl;=0A=
+}=0A=
+function __utmSetTrans() {=0A=
+ var e;=0A=
+ if (_ubd.getElementById) e=3D_ubd.getElementById("utmtrans");=0A=
+ else if (_ubd.utmform && _ubd.utmform.utmtrans) =
+e=3D_ubd.utmform.utmtrans;=0A=
+ if (!e) return;=0A=
+ var l=3De.value.split("UTM:");=0A=
+ var i,i2,c;=0A=
+ if (_userv=3D=3D0 || _userv=3D=3D2) i=3Dnew Array();=0A=
+ if (_userv=3D=3D1 || _userv=3D=3D2) { i2=3Dnew Array(); c=3D_uGCS(); }=0A=
+=0A=
+ for (var ii=3D0;ii<l.length;ii++) {=0A=
+  l[ii]=3D_uTrim(l[ii]);=0A=
+  if (l[ii].charAt(0)!=3D'T' && l[ii].charAt(0)!=3D'I') continue;=0A=
+  var r=3DMath.round(Math.random()*2147483647);=0A=
+  if (!_utsp || _utsp=3D=3D"") _utsp=3D"|";=0A=
+  var f=3Dl[ii].split(_utsp),s=3D"";=0A=
+  if (f[0].charAt(0)=3D=3D'T') {=0A=
+   s=3D"&utmt=3Dtran"+"&utmn=3D"+r;=0A=
+   f[1]=3D_uTrim(f[1]); if(f[1]&&f[1]!=3D"") =
+s+=3D"&utmtid=3D"+_uES(f[1]);=0A=
+   f[2]=3D_uTrim(f[2]); if(f[2]&&f[2]!=3D"") =
+s+=3D"&utmtst=3D"+_uES(f[2]);=0A=
+   f[3]=3D_uTrim(f[3]); if(f[3]&&f[3]!=3D"") =
+s+=3D"&utmtto=3D"+_uES(f[3]);=0A=
+   f[4]=3D_uTrim(f[4]); if(f[4]&&f[4]!=3D"") =
+s+=3D"&utmttx=3D"+_uES(f[4]);=0A=
+   f[5]=3D_uTrim(f[5]); if(f[5]&&f[5]!=3D"") =
+s+=3D"&utmtsp=3D"+_uES(f[5]);=0A=
+   f[6]=3D_uTrim(f[6]); if(f[6]&&f[6]!=3D"") =
+s+=3D"&utmtci=3D"+_uES(f[6]);=0A=
+   f[7]=3D_uTrim(f[7]); if(f[7]&&f[7]!=3D"") =
+s+=3D"&utmtrg=3D"+_uES(f[7]);=0A=
+   f[8]=3D_uTrim(f[8]); if(f[8]&&f[8]!=3D"") =
+s+=3D"&utmtco=3D"+_uES(f[8]);=0A=
+  } else {=0A=
+   s=3D"&utmt=3Ditem"+"&utmn=3D"+r;=0A=
+   f[1]=3D_uTrim(f[1]); if(f[1]&&f[1]!=3D"") =
+s+=3D"&utmtid=3D"+_uES(f[1]);=0A=
+   f[2]=3D_uTrim(f[2]); if(f[2]&&f[2]!=3D"") =
+s+=3D"&utmipc=3D"+_uES(f[2]);=0A=
+   f[3]=3D_uTrim(f[3]); if(f[3]&&f[3]!=3D"") =
+s+=3D"&utmipn=3D"+_uES(f[3]);=0A=
+   f[4]=3D_uTrim(f[4]); if(f[4]&&f[4]!=3D"") =
+s+=3D"&utmiva=3D"+_uES(f[4]);=0A=
+   f[5]=3D_uTrim(f[5]); if(f[5]&&f[5]!=3D"") =
+s+=3D"&utmipr=3D"+_uES(f[5]);=0A=
+   f[6]=3D_uTrim(f[6]); if(f[6]&&f[6]!=3D"") =
+s+=3D"&utmiqt=3D"+_uES(f[6]);=0A=
+  }=0A=
+  if (_udl.hostname && _udl.hostname!=3D"") =
+s+=3D"&utmhn=3D"+_uES(_udl.hostname);=0A=
+  if (_usample && _usample !=3D 100) s+=3D"&utmsp=3D"+_uES(_usample);=0A=
+=0A=
+  if ((_userv=3D=3D0 || _userv=3D=3D2) && _uSP()) {=0A=
+   i[ii]=3Dnew Image(1,1);=0A=
+   i[ii].src=3D_ugifpath+"?"+"utmwv=3D"+_uwv+s;=0A=
+   i[ii].onload=3Dfunction() { _uVoid(); }=0A=
+  }=0A=
+  if ((_userv=3D=3D1 || _userv=3D=3D2) && _uSP()) {=0A=
+   i2[ii]=3Dnew Image(1,1);=0A=
+   =
+i2[ii].src=3D_ugifpath2+"?"+"utmwv=3D"+_uwv+s+"&utmac=3D"+_uacct+"&utmcc=3D=
+"+c;=0A=
+   i2[ii].onload=3Dfunction() { _uVoid(); }=0A=
+  }=0A=
+ }=0A=
+ return;=0A=
+}=0A=
+function _uFlash() {=0A=
+ var f=3D"-",n=3Dnavigator;=0A=
+ if (n.plugins && n.plugins.length) {=0A=
+  for (var ii=3D0;ii<n.plugins.length;ii++) {=0A=
+   if (n.plugins[ii].name.indexOf('Shockwave Flash')!=3D-1) {=0A=
+    f=3Dn.plugins[ii].description.split('Shockwave Flash ')[1];=0A=
+    break;=0A=
+   }=0A=
+  }=0A=
+ } else {=0A=
+  var fl;=0A=
+  try {=0A=
+   fl =3D new ActiveXObject("ShockwaveFlash.ShockwaveFlash.7");=0A=
+   f =3D fl.GetVariable("$version");=0A=
+  } catch(e) {}=0A=
+  if (f =3D=3D "-") {=0A=
+   try {=0A=
+    fl =3D new ActiveXObject("ShockwaveFlash.ShockwaveFlash.6");=0A=
+    f =3D "WIN 6,0,21,0";=0A=
+    fl.AllowScriptAccess =3D "always";=0A=
+    f =3D fl.GetVariable("$version");=0A=
+   } catch(e) {}=0A=
+  }=0A=
+  if (f =3D=3D "-") {=0A=
+   try {=0A=
+    fl =3D new ActiveXObject("ShockwaveFlash.ShockwaveFlash");=0A=
+    f =3D fl.GetVariable("$version");=0A=
+   } catch(e) {}=0A=
+  }=0A=
+  if (f !=3D "-") {=0A=
+   f =3D f.split(" ")[1].split(",");=0A=
+   f =3D f[0] + "." + f[1] + " r" + f[2];=0A=
+  }=0A=
+ }=0A=
+ return f;=0A=
+}=0A=
+function __utmLinkerUrl(l,h) {=0A=
+ var p,k,a=3D"-",b=3D"-",c=3D"-",x=3D"-",z=3D"-",v=3D"-";=0A=
+ var dc=3D_ubd.cookie;=0A=
+ var iq =3D l.indexOf("?");=0A=
+ var ih =3D l.indexOf("#");=0A=
+ var url=3Dl;=0A=
+ if (dc) {=0A=
+  a=3D_uES(_uGC(dc,"__utma=3D"+_udh+".",";"));=0A=
+  b=3D_uES(_uGC(dc,"__utmb=3D"+_udh,";"));=0A=
+  c=3D_uES(_uGC(dc,"__utmc=3D"+_udh,";"));=0A=
+  x=3D_uES(_uGC(dc,"__utmx=3D"+_udh,";"));=0A=
+  z=3D_uES(_uGC(dc,"__utmz=3D"+_udh+".",";"));=0A=
+  v=3D_uES(_uGC(dc,"__utmv=3D"+_udh+".",";"));=0A=
+  k=3D(_uHash(a+b+c+x+z+v)*1)+(_udh*1);=0A=
+  =
+p=3D"__utma=3D"+a+"&__utmb=3D"+b+"&__utmc=3D"+c+"&__utmx=3D"+x+"&__utmz=3D=
+"+z+"&__utmv=3D"+v+"&__utmk=3D"+k;=0A=
+ }=0A=
+ if (p) {=0A=
+  if (h && ih>-1) return;=0A=
+  if (h) { url=3Dl+"#"+p; }=0A=
+  else {=0A=
+   if (iq=3D=3D-1 && ih=3D=3D-1) url=3Dl+"?"+p;=0A=
+   else if (ih=3D=3D-1) url=3Dl+"&"+p;=0A=
+   else if (iq=3D=3D-1) url=3Dl.substring(0,ih-1)+"?"+p+l.substring(ih);=0A=
+   else url=3Dl.substring(0,ih-1)+"&"+p+l.substring(ih);=0A=
+  }=0A=
+ }=0A=
+ return url;=0A=
+}=0A=
+function __utmLinker(l,h) {=0A=
+ if (!_ulink || !l || l=3D=3D"") return;=0A=
+ _udl.href=3D__utmLinkerUrl(l,h);=0A=
+}=0A=
+function __utmLinkPost(f,h) {=0A=
+ if (!_ulink || !f || !f.action) return;=0A=
+ f.action=3D__utmLinkerUrl(f.action, h);=0A=
+ return;=0A=
+}=0A=
+function __utmSetVar(v) {=0A=
+ if (!v || v=3D=3D"") return;=0A=
+ if (!_udo || _udo =3D=3D "") {=0A=
+  _udh=3D_uDomain();=0A=
+  if (_udn && _udn!=3D"") { _udo=3D" domain=3D"+_udn+";"; }=0A=
+ }=0A=
+ if (!_uVG()) return;=0A=
+ var r=3DMath.round(Math.random() * 2147483647);=0A=
+ _ubd.cookie=3D"__utmv=3D"+_udh+"."+_uES(v)+"; path=3D"+_utcp+"; =
+expires=3D"+_uNx()+";"+_udo;=0A=
+ var s=3D"&utmt=3Dvar&utmn=3D"+r;=0A=
+ if (_usample && _usample !=3D 100) s+=3D"&utmsp=3D"+_uES(_usample);=0A=
+ if ((_userv=3D=3D0 || _userv=3D=3D2) && _uSP()) {=0A=
+  var i=3Dnew Image(1,1);=0A=
+  i.src=3D_ugifpath+"?"+"utmwv=3D"+_uwv+s;=0A=
+  i.onload=3Dfunction() { _uVoid(); }=0A=
+ }=0A=
+ if ((_userv=3D=3D1 || _userv=3D=3D2) && _uSP()) {=0A=
+  var i2=3Dnew Image(1,1);=0A=
+  =
+i2.src=3D_ugifpath2+"?"+"utmwv=3D"+_uwv+s+"&utmac=3D"+_uacct+"&utmcc=3D"+=
+_uGCS();=0A=
+  i2.onload=3Dfunction() { _uVoid(); }=0A=
+ }=0A=
+}=0A=
+function _uGCS() {=0A=
+ var t,c=3D"",dc=3D_ubd.cookie;=0A=
+ if ((t=3D_uGC(dc,"__utma=3D"+_udh+".",";"))!=3D"-") =
+c+=3D_uES("__utma=3D"+t+";+");=0A=
+ if ((t=3D_uGC(dc,"__utmx=3D"+_udh,";"))!=3D"-") =
+c+=3D_uES("__utmx=3D"+t+";+");=0A=
+ if ((t=3D_uGC(dc,"__utmz=3D"+_udh+".",";"))!=3D"-") =
+c+=3D_uES("__utmz=3D"+t+";+");=0A=
+ if ((t=3D_uGC(dc,"__utmv=3D"+_udh+".",";"))!=3D"-") =
+c+=3D_uES("__utmv=3D"+t+";");=0A=
+ if (c.charAt(c.length-1)=3D=3D"+") c=3Dc.substring(0,c.length-1);=0A=
+ return c;=0A=
+}=0A=
+function _uGC(l,n,s) {=0A=
+ if (!l || l=3D=3D"" || !n || n=3D=3D"" || !s || s=3D=3D"") return "-";=0A=
+ var i,i2,i3,c=3D"-";=0A=
+ i=3Dl.indexOf(n);=0A=
+ i3=3Dn.indexOf("=3D")+1;=0A=
+ if (i > -1) {=0A=
+  i2=3Dl.indexOf(s,i); if (i2 < 0) { i2=3Dl.length; }=0A=
+  c=3Dl.substring((i+i3),i2);=0A=
+ }=0A=
+ return c;=0A=
+}=0A=
+function _uDomain() {=0A=
+ if (!_udn || _udn=3D=3D"" || _udn=3D=3D"none") { _udn=3D""; return 1; }=0A=
+ if (_udn=3D=3D"auto") {=0A=
+  var d=3D_ubd.domain;=0A=
+  if (d.substring(0,4)=3D=3D"www.") {=0A=
+   d=3Dd.substring(4,d.length);=0A=
+  }=0A=
+  _udn=3Dd;=0A=
+ }=0A=
+ _udn =3D _udn.toLowerCase(); =0A=
+ if (_uhash=3D=3D"off") return 1;=0A=
+ return _uHash(_udn);=0A=
+}=0A=
+function _uHash(d) {=0A=
+ if (!d || d=3D=3D"") return 1;=0A=
+ var h=3D0,g=3D0;=0A=
+ for (var i=3Dd.length-1;i>=3D0;i--) {=0A=
+  var c=3DparseInt(d.charCodeAt(i));=0A=
+  h=3D((h << 6) & 0xfffffff) + c + (c << 14);=0A=
+  if ((g=3Dh & 0xfe00000)!=3D0) h=3D(h ^ (g >> 21));=0A=
+ }=0A=
+ return h;=0A=
+}=0A=
+function _uFixA(c,s,t) {=0A=
+ if (!c || c=3D=3D"" || !s || s=3D=3D"" || !t || t=3D=3D"") return "-";=0A=
+ var a=3D_uGC(c,"__utma=3D"+_udh+".",s);=0A=
+ var lt=3D0,i=3D0;=0A=
+ if ((i=3Da.lastIndexOf(".")) > 9) {=0A=
+  _uns=3Da.substring(i+1,a.length);=0A=
+  _uns=3D(_uns*1)+1;=0A=
+  a=3Da.substring(0,i);=0A=
+  if ((i=3Da.lastIndexOf(".")) > 7) {=0A=
+   lt=3Da.substring(i+1,a.length);=0A=
+   a=3Da.substring(0,i);=0A=
+  }=0A=
+  if ((i=3Da.lastIndexOf(".")) > 5) {=0A=
+   a=3Da.substring(0,i);=0A=
+  }=0A=
+  a+=3D"."+lt+"."+t+"."+_uns;=0A=
+ }=0A=
+ return a;=0A=
+}=0A=
+function _uTrim(s) {=0A=
+  if (!s || s=3D=3D"") return "";=0A=
+  while ((s.charAt(0)=3D=3D' ') || (s.charAt(0)=3D=3D'\n') || =
+(s.charAt(0,1)=3D=3D'\r')) s=3Ds.substring(1,s.length);=0A=
+  while ((s.charAt(s.length-1)=3D=3D' ') || =
+(s.charAt(s.length-1)=3D=3D'\n') || (s.charAt(s.length-1)=3D=3D'\r')) =
+s=3Ds.substring(0,s.length-1);=0A=
+  return s;=0A=
+}=0A=
+function _uEC(s) {=0A=
+  var n=3D"";=0A=
+  if (!s || s=3D=3D"") return "";=0A=
+  for (var i=3D0;i<s.length;i++) {if (s.charAt(i)=3D=3D" ") n+=3D"+"; =
+else n+=3Ds.charAt(i);}=0A=
+  return n;=0A=
+}=0A=
+function __utmVisitorCode(f) {=0A=
+ var r=3D0,t=3D0,i=3D0,i2=3D0,m=3D31;=0A=
+ var a=3D_uGC(_ubd.cookie,"__utma=3D"+_udh+".",";");=0A=
+ if ((i=3Da.indexOf(".",0))<0) return;=0A=
+ if ((i2=3Da.indexOf(".",i+1))>0) r=3Da.substring(i+1,i2); else return =
+"";  =0A=
+ if ((i=3Da.indexOf(".",i2+1))>0) t=3Da.substring(i2+1,i); else return =
+"";  =0A=
+ if (f) {=0A=
+  return r;=0A=
+ } else {=0A=
+  var c=3Dnew =
+Array('A','B','C','D','E','F','G','H','J','K','L','M','N','P','R','S','T'=
+,'U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9');=0A=
+  return =
+c[r>>28&m]+c[r>>23&m]+c[r>>18&m]+c[r>>13&m]+"-"+c[r>>8&m]+c[r>>3&m]+c[((r=
+&7)<<2)+(t>>30&3)]+c[t>>25&m]+c[t>>20&m]+"-"+c[t>>15&m]+c[t>>10&m]+c[t>>5=
+&m]+c[t&m];=0A=
+ }=0A=
+}=0A=
+function _uIN(n) {=0A=
+ if (!n) return false;=0A=
+ for (var i=3D0;i<n.length;i++) {=0A=
+  var c=3Dn.charAt(i);=0A=
+  if ((c<"0" || c>"9") && (c!=3D".")) return false;=0A=
+ }=0A=
+ return true;=0A=
+}=0A=
+function _uES(s,u) {=0A=
+ if (typeof(encodeURIComponent) =3D=3D 'function') {=0A=
+  if (u) return encodeURI(s);=0A=
+  else return encodeURIComponent(s);=0A=
+ } else {=0A=
+  return escape(s);=0A=
+ }=0A=
+}=0A=
+function _uUES(s) {=0A=
+ if (typeof(decodeURIComponent) =3D=3D 'function') {=0A=
+  return decodeURIComponent(s);=0A=
+ } else {=0A=
+  return unescape(s);=0A=
+ }=0A=
+}=0A=
+function _uVG() {=0A=
+ if((_udn.indexOf("www.google.") =3D=3D 0 || _udn.indexOf(".google.") =
+=3D=3D 0 || _udn.indexOf("google.") =3D=3D 0) && _utcp=3D=3D'/' && =
+_udn.indexOf("google.org")=3D=3D-1) {=0A=
+  return false;=0A=
+ }=0A=
+ return true;=0A=
+}=0A=
+function _uSP() {=0A=
+ var s=3D100;=0A=
+ if (_usample) s=3D_usample;=0A=
+ if(s>=3D100 || s<=3D0) return true;=0A=
+ return ((__utmVisitorCode(1)%10000)<(s*100));=0A=
+}=0A=
+function urchinPathCopy(p){=0A=
+ var d=3Ddocument,nx,tx,sx,i,c,cs,t,h,o;=0A=
+ cs=3Dnew Array("a","b","c","v","x","z");=0A=
+ h=3D_uDomain(); if (_udn && _udn!=3D"") o=3D" domain=3D"+_udn+";";=0A=
+ nx=3D_uNx()+";";=0A=
+ tx=3Dnew Date(); tx.setTime(tx.getTime()+(_utimeout*1000));=0A=
+ tx=3Dtx.toGMTString()+";";=0A=
+ sx=3Dnew Date(); sx.setTime(sx.getTime()+(_ucto*1000));=0A=
+ sx=3Dsx.toGMTString()+";";=0A=
+ for (i=3D0;i<6;i++){=0A=
+  t=3D" expires=3D";=0A=
+  if (i=3D=3D1) t+=3Dtx; else if (i=3D=3D2) t=3D""; else if (i=3D=3D5) =
+t+=3Dsx; else t+=3Dnx;=0A=
+  c=3D_uGC(d.cookie,"__utm"+cs[i]+"=3D"+h,";");=0A=
+  if (c!=3D"-") d.cookie=3D"__utm"+cs[i]+"=3D"+c+"; path=3D"+p+";"+t+o;=0A=
+ }=0A=
+}=0A=
+function _uCO() {=0A=
+ if (!_utk || _utk=3D=3D"" || _utk.length<10) return;=0A=
+ var d=3D'www.google.com';=0A=
+ if (_utk.charAt(0)=3D=3D'!') d=3D'analytics.corp.google.com';=0A=
+ _ubd.cookie=3D"GASO=3D"+_utk+"; path=3D"+_utcp+";"+_udo;=0A=
+ var sc=3Ddocument.createElement('script');=0A=
+ sc.type=3D'text/javascript';=0A=
+ sc.id=3D"_gasojs";=0A=
+ =
+sc.src=3D'https://'+d+'/analytics/reporting/overlay_js?gaso=3D'+_utk+'&'+=
+Math.random();=0A=
+ document.getElementsByTagName('head')[0].appendChild(sc);  =0A=
+}=0A=
+function _uGT() {=0A=
+ var h=3Dlocation.hash, a;=0A=
+ if (h && h!=3D"" && h.indexOf("#gaso=3D")=3D=3D0) {=0A=
+  a=3D_uGC(h,"gaso=3D","&");=0A=
+ } else {=0A=
+  a=3D_uGC(_ubd.cookie,"GASO=3D",";");=0A=
+ }=0A=
+ return a;=0A=
+}=0A=
+var _utk=3D_uGT();=0A=
+if (_utk && _utk!=3D"" && _utk.length>10 && _utk.indexOf("=3D")=3D=3D-1) =
+{=0A=
+ if (window.addEventListener) {=0A=
+  window.addEventListener('load', _uCO, false); =0A=
+ } else if (window.attachEvent) { =0A=
+  window.attachEvent('onload', _uCO);=0A=
+ }=0A=
+}=0A=
+=0A=
+function _uNx() {=0A=
+  return (new Date((new Date()).getTime()+63072000000)).toGMTString();=0A=
+}=0A=
+
+------=_NextPart_000_0000_01CB278C.49520D90--

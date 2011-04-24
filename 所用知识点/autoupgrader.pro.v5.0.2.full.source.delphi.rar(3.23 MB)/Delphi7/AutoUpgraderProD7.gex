@@ -1,0 +1,8 @@
+[General]
+Name=AutoUpgraderProD7
+Project=1
+[Classes]
+Count=3
+Class0="TauHTTPProxyProperty","TClassProperty","_AUReg","0","D:\myCode\zt\gygac_zt3\所用知识点\autoupgrader.pro.v5.0.2.full.source.delphi.rar(3.23 MB)\Delphi7\_AUReg.pas"
+Class1="TauAutoUpgraderProperty","TClassProperty","_AUReg","0","D:\myCode\zt\gygac_zt3\所用知识点\autoupgrader.pro.v5.0.2.full.source.delphi.rar(3.23 MB)\Delphi7\_AUReg.pas"
+Class2="TauAutoUpgraderCompEditor","TComponentEditor","_AUReg","0","D:\myCode\zt\gygac_zt3\所用知识点\autoupgrader.pro.v5.0.2.full.source.delphi.rar(3.23 MB)\Delphi7\_AUReg.pas"
