@@ -1,0 +1,40 @@
+;INI文件的结构
+;注释   
+;[小节名]   
+;关键字=值  
+
+;设置
+[ProgramSet]
+;01.05.02 新增日志功能，更改了读卡流程
+;02.00.00 新增吸毒人员数据及前科人员数据，将数据全部使用Sqlite，更改了日志结构
+Version=02.00.00
+ConnString=
+Data Source=cjry.db
+SQL=SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where number= '%s'
+SQLXm=SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where xm Like '%s'
+SQLNumber=SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where xm Like '%s'
+;数据表格显示字段，以英文的“,”分隔
+ViewFields=序号,姓名,证件号码,案件类别,在逃编号
+;每列的宽度，以英文的“,”分隔，与ViewFields的个数匹配
+ViewFieldsWidth=50,100,200,160,200
+;播放声音，0：不允许，1：允许
+PlaySound=1
+AlarmFileA=SIREN1.WAV
+AlarmFileB=SIREN1.WAV
+AlarmFileC=SIREN1.WAV
+;是否播放读卡后的声音，新中新的读卡器读卡后会有蜂鸣声提示，而华旭的没有，允许播放后可以通过音箱提示
+;必须要PlaySound为允许才有效 ，0：不允许，1：允许
+PlayPassedSound=1
+PassedSoundFile=passed.wav
+;线程睡眠时间
+SpanInSecs=50
+;自动更新
+Server=http://10.4.31.173/
+;日志文件名称
+LogFile=Log.db
+CreateLogTable=CREATE TABLE Logs([ID] INTEGER PRIMARY KEY,[IDCardNo] VARCHAR (50) NOT NULL,[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')));
+LogSQL=INSERT INTO Logs([IDCardNo]) VALUES ('%s');
+LogDays=30
+;统计分析
+StatisIDCardNoSQL=SELECT * FROM Logs where IDCardNo Like '%%s%'
+StatisDateTimeSQL=SELECT * FROM Logs where CreatedTime>'%s' AND CreatedTime<'%s';
