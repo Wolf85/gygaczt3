@@ -1,6 +1,6 @@
 object frmMain: TfrmMain
-  Left = 163
-  Top = 77
+  Left = 256
+  Top = 156
   Width = 808
   Height = 650
   Caption = #36149#38451#38081#36335#20844#23433#22788#20154#21592#27604#23545#31995#32479
@@ -384,14 +384,14 @@ object frmMain: TfrmMain
         TabOrder = 0
         OnKeyPress = btnKeyPress
       end
-      object btnTest: TButton
+      object btnSearch: TButton
         Left = 70
         Top = 112
         Width = 75
         Height = 25
         Caption = #26597#35810'(&S)'
         TabOrder = 2
-        OnClick = btnTestClick
+        OnClick = btnSearchClick
       end
       object btnClear: TButton
         Left = 190
@@ -433,7 +433,9 @@ object frmMain: TfrmMain
       Align = alClient
       ColCount = 3
       RowCount = 2
+      FixedRows = 0
       TabOrder = 1
+      OnDrawCell = strngrdResultDrawCell
       RowHeights = (
         24
         24)
@@ -505,7 +507,7 @@ object frmMain: TfrmMain
     InfoFile.UpgradeMsg = 'first release'
     InfoFileURL = 'http://10.4.12.15/gygac_zt/AutoUpgrader.inf'
     VersionControl = byNumber
-    VersionDate = '04/23/2011'
+    VersionDate = '05/03/2011'
     VersionDateAutoSet = True
     VersionNumber = '01.02.00'
     ShowMessages = [mAskUpgrade, mConnLost, mHostUnreachable, mLostFile, mNoInfoFile, mNoUpdateAvailable, mPasswordRequest]
@@ -517,12 +519,12 @@ object frmMain: TfrmMain
     InfoFile.UpgradeMsg = 'first release'
     InfoFileURL = 'http://10.4.12.15/gygac_zt/db/AutoUpgrader.inf'
     VersionControl = byNumber
-    VersionDate = '04/23/2011'
+    VersionDate = '05/03/2011'
     VersionDateAutoSet = True
     VersionNumber = '01.02.00'
     ShowMessages = [mAskUpgrade, mConnLost, mHostUnreachable, mLostFile, mNoInfoFile, mNoUpdateAvailable, mPasswordRequest]
     Wizard.Language = wlChineseSimplified
-    OnFileDone = atpgrdrDatabaseFileDone
+    OnDoOwnCloseAppMethod = atpgrdrDatabaseDoOwnCloseAppMethod
     Left = 568
     Top = 65520
   end

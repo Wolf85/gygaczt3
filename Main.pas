@@ -58,7 +58,7 @@ type
     edtInputCardNo: TEdit;
     edtInputName: TEdit;
     lblInputName: TLabel;
-    btnTest: TButton;
+    btnSearch: TButton;
     btnClear: TButton;
     btnStart: TButton;
     btnStop: TButton;
@@ -73,36 +73,41 @@ type
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure menuTestSoundClick(Sender: TObject);
-    procedure btnTestClick(Sender: TObject);
+    procedure btnSearchClick(Sender: TObject);
     procedure menuUpdateClick(Sender: TObject);
     procedure menuAboutClick(Sender: TObject);
-    procedure atpgrdrDatabaseFileDone(Sender: TObject; const FileName: String);
     procedure menuOptionClick(Sender: TObject);
     procedure menuUpdateDataClick(Sender: TObject);
     procedure menuSearchClick(Sender: TObject);
     procedure menuHelpClick(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
     procedure btnKeyPress(Sender: TObject; var Key: Char);
+    procedure atpgrdrDatabaseDoOwnCloseAppMethod(Sender: TObject);
+    procedure strngrdResultDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
 
   private
     { Private declarations }
+    FExepath : string;
     procedure EnableButton(Enable : Boolean);
 //    procedure SetDBGrid;
     procedure InitGrid;
   public
     { Public declarations }
-
+    property ExePath : string read FExepath;
+    procedure ClearstrnGrid;
   end;
 
   const
     IniFilename = 'Program.inf';
     DBVersionFilename ='dbVersion.inf';
+ 
 var
   frmMain: TfrmMain;
   Port : Integer;
   CjryDb: TSQLiteDatabase;
 implementation
-uses ReadThread, LogHelperUnit, IDCardClass, OptionsForm, StatisForm;
+uses ReadThread, LogHelperUnit, IDCardClass, OptionsForm, StatisForm, Global, sevenzip;
 {$R *.dfm}
 
 var
@@ -111,18 +116,18 @@ var
 {事件处理函数}
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
-  exepath,filename : string;
+  filename : string;
 begin
   EnableButton(False);
   lblMsg.Caption := '';
 
-  exepath := ExtractFilePath(ParamStr(0));
+  FExepath := ExtractFilePath(ParamStr(0));
   stat1.Panels[1].Text := '读卡工作未启动。。。。。。';
 
   {读配置文件和数据版本文件}
-  fileName := exepath+ IniFileName;
+  fileName := Exepath+ IniFileName;
   IniOptions.LoadFromFile(fileName);
-  fileName := exepath + DBVersionFilename;
+  fileName := Exepath + DBVersionFilename;
   DBVersion.LoadFromFile(fileName);
 
   {处理版本信息}
@@ -134,9 +139,8 @@ begin
   InitGrid;
   thRead := TReadThread.Create(True);
   CjryDb := TSQLiteDatabase.Create(Utf8Encode(ExtractFilepath(application.exename) + IniOptions.DataSource));
-
   menuOpenPortClick(Self);
-  //if Port>0 then btnStart.Click;
+  if Port>0 then btnStart.Click;
 end;
 
 procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -234,33 +238,15 @@ begin
   btnStop.Enabled := Enable;
 end;
 
-procedure TfrmMain.btnTestClick(Sender: TObject);
+procedure TfrmMain.btnSearchClick(Sender: TObject);
 var
   slutb : TSQLiteTable;
   strSQL : string;
   iRow : Integer;
 begin
-//  if(qryADO.Active = True) then
-//  begin
-//    qryADO.Active := False;
-//  end;
-//  if (edtInputName.Text <> '') then
-//
-//  begin
-//    qryADO.SQL.Text := Format(IniOptions.SQLName,['%' + edtInputName.Text + '%']);
-//    qryADO.Active := True;
-//  end
-//  else
-//  begin
-//    if (edtInputCardNo.Text <> '') then
-//    begin
-//      qryADO.SQL.Text := Format(IniOptions.SQLIDCard,['%' + edtInputCardNo.Text + '%']);
-//      qryADO.Active := True;
-//    end;
-//  end;
   if (edtInputName.Text <> '') then
   begin
-    strSQL := Format(IniOptions.SQLXm,['%' + edtInputName.Text + '%']);
+    strSQL := Format(IniOptions.SQLXm,[edtInputName.Text + '%']);
   end
   else
   begin
@@ -270,21 +256,22 @@ begin
     end;
   end;
   if (strSQL <> '') then
-  begin
-    slutb := CjryDb.GetTable(strSQL);
+  begin 
+
+    slutb := CjryDb.GetTable(UTF8Encode(strSQL));
     try
       iRow := 1;
-      strngrdResult.RowCount := 2;
+      strngrdResult.RowCount := slutb.RowCount + 1;
       while not slutb.EOF do
       begin
         with slutb do
         begin
           with strngrdResult do
           begin
-            RowCount := RowCount +1;
-            Cells[0,iRow] := FieldAsString(FieldIndex['id']);
-            Cells[1,iRow] := FieldAsString(FieldIndex['idcardno']);
-            Cells[2,iRow] := FieldAsString(FieldIndex['Createdtime']);
+            Cells[0,iRow] := IntToStr(iRow);
+            Cells[1,iRow] := UTF8Decode(FieldAsString(FieldIndex['xm']));
+            Cells[2,iRow] := UTF8Decode(FieldAsString(FieldIndex['number']));
+            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['lb']));
           end;
           Inc(iRow);
           Next;
@@ -300,7 +287,7 @@ procedure TfrmMain.btnKeyPress(Sender: TObject; var Key: Char);
 begin
   if Key = #13 then
   begin
-    btnTestClick(Sender);
+    btnSearchClick(Sender);
   end;  
 end;
 
@@ -310,14 +297,38 @@ begin
   edtInputCardNo.Text := '';
 end;
 
-procedure TfrmMain.atpgrdrDatabaseFileDone(Sender: TObject;
-  const FileName: String);
+procedure TfrmMain.atpgrdrDatabaseDoOwnCloseAppMethod(Sender: TObject);
+var
+  filename : string;
 begin
-  
   thRead.Terminate;
-  //qryADO.Active := False;
   FreeAndNil(CjryDb);
+  filename := Exepath + IniOptions.DefaultDataFilename;
+  if(FileExists(filename)) then
+  begin        
+    with CreateInArchive(CLSID_CFormat7z) do
+    begin
+      OpenFile(filename);
+      ExtractTo(ExePath);
+    end;
+    Sleep(1000);
+  end;
   LogHelper.CleanLog(IniOptions.LogDays);
+  if Assigned(Application.MainForm) then
+    Application.MainForm.Close;
+  Application.Terminate;      
+end;
+
+procedure TfrmMain.menuSearchClick(Sender: TObject);
+begin
+  frmStatis.InitDatetimePicker;
+  frmStatis.ShowModal;
+end;
+
+procedure TfrmMain.menuHelpClick(Sender: TObject);
+begin
+  Winexec(PChar('explorer help.mht'),SW_SHOWNORMAL);
+
 end;
 
 {用户定义事件}
@@ -353,6 +364,7 @@ begin
           Cells[i,0] :=  FieldList.Strings[i];
         end;
       end;
+      strngrdResult.FixedRows := 1;
     end;
   finally
     FreeAndNil(FieldList);
@@ -361,20 +373,28 @@ begin
   
 end;
 
-procedure TfrmMain.menuSearchClick(Sender: TObject);
+procedure TfrmMain.ClearstrnGrid;
+var
+  i : Integer;
 begin
-  frmStatis.InitDatetimePicker;
-  frmStatis.ShowModal;
+  with strngrdResult do
+  begin
+    RowCount := 2;
+    for i:=0 to ColCount do
+    begin
+      Cells[i,1] := '';
+    end;  
+  end;
 end;
-
-procedure TfrmMain.menuHelpClick(Sender: TObject);
+  
+procedure TfrmMain.strngrdResultDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
 begin
-  Winexec(PChar('explorer help.mht'),SW_SHOWNORMAL); 
 
+//  if LowerCase(TStringGrid(Sender).Cells[3,ARow])='在逃人员' then
+//  begin
+//    TStringGrid(Sender).Canvas.Font.Color := $000000ff;
+//  end;
 end;
-
-
-
-
 
 end.

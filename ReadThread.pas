@@ -11,7 +11,7 @@ unit ReadThread;
 interface
 
 uses
-  Classes, SysUtils, Windows, Main, mmsystem, IniOptionsUnit, IDCardClass;
+  Classes, SysUtils, Windows, Main, mmsystem, IniOptionsUnit, IDCardClass, RyxxClass;
 
 type
 
@@ -20,11 +20,13 @@ type
     { Private declarations }
     IDCard : TIDCardClass;
     FRecno : Integer;
+    FRyxx : TRyxx;
   private
     function GetCardmsg(const cardmsg : TIDCardData;const filename:string): TIDCardClass;
-    procedure PlayHintSound(const Recno :Integer);
+    procedure PlayHintSound(const Recno :Integer); overload;
+    procedure PlayHintSound(const ryxx :TRyxx); overload;
     //function Search(const idcardno : string): Integer; //返回-1：没有查到结果，否则有结果返回，结果存储在Recno中
-    procedure Search;   //返回-1：没有查到结果，否则有结果返回，结果存储在FRecno中
+    procedure Search ;   //返回-1：没有查到结果，否则有结果返回，结果存储在FRecno与FRyxx中
     procedure ShowMsg;
   protected
     procedure Execute; override;
@@ -32,7 +34,7 @@ type
 
 implementation
 uses
-  LogHelperUnit;
+  LogHelperUnit, SQLiteTable3, QGraphics;
 { Important: Methods and properties of objects in visual components can only be
 used in a method called using Synchronize, for example,
 
@@ -52,7 +54,7 @@ var
 
   pucIIN: array[0..3] of Byte;
   pucSN: array[0..7] of Byte;
-{$IFDEF DEBUG}  
+{$IFDEF DEBUG}
   pucPHMsg : array[0..1023] of Byte;
   fsPhoto : TFileStream;
 {$ELSE}
@@ -61,18 +63,15 @@ var
   uiCHMsgLen, uiPHMsgLen: Cardinal;
   cardmsg: TIDCardData;
   strFilename: string;
-
 begin
 
   strFilename := ExtractFilePath(ParamStr(0)) + cstInfoFileName;
   while (not Terminated) do
   begin
-
         if SDT_StartFindIDCard(Port, @pucIIN, cstIfOpen) = SDT_FINDCARD_OK then
-
         begin
           if SDT_SelectIDCard(Port, @pucSN, cstIfOpen) = SDT_SUCCESS then
-          begin   
+          begin
               if SDT_ReadBaseMsg(Port, @cardmsg, @uiCHMsgLen, @pucPHMsg, @uiPHMsgLen, cstIfOpen) = SDT_SUCCESS then
               begin
 {$IFDEF DEBUG}
@@ -100,12 +99,12 @@ begin
                 IDCard := GetCardmsg(cardmsg,cstPhotoFileName);
                 try
                   Synchronize(ShowMsg);
-                  //Recno := Search(IDCard.Idcardno);
-                  Synchronize(Search);
-                  if IniOptions.PlaySound then PlayHintSound(FRecno);
+                  Synchronize(Search); 
+                  PlayHintSound(FRyxx);
                   LogHelper.Write(IDCard.Idcardno);
                 finally
                   FreeAndNil(IDCard);
+                  FreeAndNil(FRyxx);
                 end;
 
               end;
@@ -145,15 +144,56 @@ end;
 
 
 procedure TReadThread.Search;
+var
+  strSQL : string;
+  slutb : TSQLiteTable;
+  iRow : Integer;
 begin
+  FRyxx := nil;
   FRecno := -1;
-//  with frmMain.qryADO do
-//  begin
-//    if Active = True then Active := False;
-//    SQL.Text := Format(IniOptions.SQL, [IDCard.Idcardno]);
-//    Active := True;
-//    if Recno > 0 then FRecno := Recno;
-//  end;
+
+
+  frmMain.ClearstrnGrid;
+  strSQL := UTF8Encode(Format(IniOptions.SQL, [IDCard.Idcardno]));
+  slutb := CjryDb.GetTable(strSQL);
+  try
+    with slutb do
+    begin
+      frmMain.strngrdResult.RowCount := slutb.RowCount +1;
+      if RowCount > 0 then
+      begin
+        FRecno := slutb.RowCount;
+
+        FRyxx := TRyxx.Create();
+        iRow := 1;
+        while not slutb.EOF do
+        begin
+          with FRyxx do
+          begin
+            if((Jb ='') or (Jb>UTF8Decode(FieldAsString(FieldIndex['jb']))) ) then   //在逃人员的级别最高
+            begin
+              Xm	:=	UTF8Decode(FieldAsString(FieldIndex['xm']));
+              Number	:=	UTF8Decode(FieldAsString(FieldIndex['number']));
+              Jb	:=	UTF8Decode(FieldAsString(FieldIndex['jb']));
+              Lb	:=	UTF8Decode(FieldAsString(FieldIndex['lb']));
+              Ztbh	:=	UTF8Decode(FieldAsString(FieldIndex['ztbh']));
+            end;
+          end;
+          with frmMain.strngrdResult do
+          begin
+            Cells[0,iRow] := IntToStr(iRow);
+            Cells[1,iRow] := UTF8Decode(FieldAsString(FieldIndex['xm']));
+            Cells[2,iRow] := UTF8Decode(FieldAsString(FieldIndex['number']));
+            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['lb']));
+          end;
+          Inc(iRow);
+          Next;
+        end;
+      end;
+    end;
+  finally
+    FreeAndNil(slutb);
+  end;
 end;
 
 {-------------------------------------------------------------------------------
@@ -182,7 +222,31 @@ begin
     PlaySound(PChar(IniOptions.AlarmFileA), 0, 0)
   else
     if IniOptions.PlayPassedSound then
-        PlaySound(PChar(IniOptions.PassedSoundFile), 0, 0);   
+        PlaySound(PChar(IniOptions.PassedSoundFile), 0, 0);
 end;
+
+procedure TReadThread.PlayHintSound(const ryxx :TRyxx);
+var
+  soundfile : string;
+begin
+  soundfile := IniOptions.PassedSoundFile;        //默认播放通过声音
+  if (IniOptions.PlaySound) and (ryxx<>nil) then
+  begin
+    soundfile := IniOptions.AlarmFileA;
+    with ryxx do
+    begin
+      if LowerCase(Jb) = 'a' then
+        soundfile := IniOptions.AlarmFileB
+      else
+        if LowerCase(Jb) = 'b' then
+          soundfile := IniOptions.AlarmFileB
+        else
+          if LowerCase(Jb) = 'c' then
+            soundfile := IniOptions.AlarmFileC ;
+    end;
+    PlaySound(PChar(soundfile), 0, 0);
+  end;
+end;
+ 
 end.
 

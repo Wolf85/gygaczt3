@@ -12,6 +12,7 @@ const
   csIniProgramSetVersion = 'Version';
   csIniProgramSetConnString = 'ConnString';
   csIniProgramSetDataSource = 'Data Source';
+  csIniProgramSetDefaultDataFilename = 'DefaultDataFilename';
   csIniProgramSetSQL = 'SQL';
   csIniProgramSetSQLXm = 'SQLXm';
   csIniProgramSetSQLNumber = 'SQLNumber';
@@ -39,6 +40,7 @@ type
     FProgramSetVersion: string;
     FProgramSetConnString: string;
     FProgramSetDataSource: string;
+    FProgramSetDefaultDataFilename: string;
     FProgramSetSQL: string;
     FProgramSetSQLXm: string;
     FProgramSetSQLNumber: string;
@@ -69,6 +71,7 @@ type
     property Version: string read FProgramSetVersion write FProgramSetVersion;
     property ConnString: string read FProgramSetConnString write FProgramSetConnString;
     property DataSource: string read FProgramSetDataSource write FProgramSetDataSource;
+    property DefaultDataFilename: string read FProgramSetDefaultDataFilename write FProgramSetDefaultDataFilename;
     property SQL: string read FProgramSetSQL write FProgramSetSQL;
     property SQLXm: string read FProgramSetSQLXm write FProgramSetSQLXm;
     property SQLNumber: string read FProgramSetSQLNumber write FProgramSetSQLNumber;
@@ -103,9 +106,10 @@ begin
     FProgramSetVersion := Ini.ReadString(csIniProgramSetSection, csIniProgramSetVersion, '02.00.00');
     FProgramSetConnString := Ini.ReadString(csIniProgramSetSection, csIniProgramSetConnString, '');
     FProgramSetDataSource := Ini.ReadString(csIniProgramSetSection, csIniProgramSetDataSource, 'cjry.db');
-    FProgramSetSQL := Ini.ReadString(csIniProgramSetSection, csIniProgramSetSQL, 'SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where number= ''%s''');
-    FProgramSetSQLXm := Ini.ReadString(csIniProgramSetSection, csIniProgramSetSQLXm, 'SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where xm Like ''%s''');
-    FProgramSetSQLNumber := Ini.ReadString(csIniProgramSetSection, csIniProgramSetSQLNumber, 'SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where xm Like ''%s''');
+    FProgramSetDefaultDataFilename := Ini.ReadString(csIniProgramSetSection, csIniProgramSetDefaultDataFilename, 'cjry.7z.uTMP');
+    FProgramSetSQL := Ini.ReadString(csIniProgramSetSection, csIniProgramSetSQL, 'SELECT xm , number , jb, lb , ztbh FROM ryxx where number= ''%s'' Limit 100');
+    FProgramSetSQLXm := Ini.ReadString(csIniProgramSetSection, csIniProgramSetSQLXm, 'SELECT xm , number , jb, lb , ztbh FROM ryxx where xm Like ''%s'' Limit 100');
+    FProgramSetSQLNumber := Ini.ReadString(csIniProgramSetSection, csIniProgramSetSQLNumber, 'SELECT xm , number , jb, lb , ztbh FROM ryxx where xm Like ''%s'' Limit 100');
     FProgramSetViewFields := Ini.ReadString(csIniProgramSetSection, csIniProgramSetViewFields, '序号,姓名,证件号码,案件类别,在逃编号');
     FProgramSetViewFieldsWidth := Ini.ReadString(csIniProgramSetSection, csIniProgramSetViewFieldsWidth, '50,100,200,160,200');
     FProgramSetPlaySound := Ini.ReadBool(csIniProgramSetSection, csIniProgramSetPlaySound, True);
@@ -133,6 +137,7 @@ begin
     Ini.WriteString(csIniProgramSetSection, csIniProgramSetVersion, FProgramSetVersion);
     Ini.WriteString(csIniProgramSetSection, csIniProgramSetConnString, FProgramSetConnString);
     Ini.WriteString(csIniProgramSetSection, csIniProgramSetDataSource, FProgramSetDataSource);
+    Ini.WriteString(csIniProgramSetSection, csIniProgramSetDefaultDataFilename, FProgramSetDefaultDataFilename);
     Ini.WriteString(csIniProgramSetSection, csIniProgramSetSQL, FProgramSetSQL);
     Ini.WriteString(csIniProgramSetSection, csIniProgramSetSQLXm, FProgramSetSQLXm);
     Ini.WriteString(csIniProgramSetSection, csIniProgramSetSQLNumber, FProgramSetSQLNumber);
