@@ -11,6 +11,9 @@ uses
   SQLite3 in 'SQLite3.pas',
   LogHelperUnit in 'LogHelperUnit.pas',
   StatisForm in 'StatisForm.pas' {frmStatis},
+  Global in 'Global.pas',
+  sevenzip in 'sevenzip.pas',
+  RyxxClass in 'RyxxClass.pas',
   IniOptionsUnit in 'IniOptionsUnit.pas';
 
 {$R *.res}

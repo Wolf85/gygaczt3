@@ -181,7 +181,7 @@ type
 
 implementation
 
-uses SysUtils;
+uses SysUtils,Windows;
 
 function TIDCardClass.GetSex : string;
 var
@@ -277,5 +277,7 @@ begin
     Result := ' 错误类型：未知错误!返回值'+ inttostr(ErrorValue);
   end;  
 end;
+
+
 end.
  
