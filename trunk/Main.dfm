@@ -1,6 +1,6 @@
 object frmMain: TfrmMain
-  Left = 256
-  Top = 156
+  Left = 172
+  Top = 117
   Width = 808
   Height = 650
   Caption = #36149#38451#38081#36335#20844#23433#22788#20154#21592#27604#23545#31995#32479
@@ -408,13 +408,13 @@ object frmMain: TfrmMain
     Left = 0
     Top = 340
     Width = 800
-    Height = 256
+    Height = 264
     Align = alClient
     Caption = 'pnlBottom'
     TabOrder = 1
     object stat1: TStatusBar
       Left = 1
-      Top = 224
+      Top = 232
       Width = 798
       Height = 31
       Panels = <
@@ -429,7 +429,7 @@ object frmMain: TfrmMain
       Left = 1
       Top = 1
       Width = 798
-      Height = 223
+      Height = 231
       Align = alClient
       ColCount = 3
       RowCount = 2
@@ -507,7 +507,7 @@ object frmMain: TfrmMain
     InfoFile.UpgradeMsg = 'first release'
     InfoFileURL = 'http://10.4.12.15/gygac_zt/AutoUpgrader.inf'
     VersionControl = byNumber
-    VersionDate = '05/03/2011'
+    VersionDate = '10/22/2012'
     VersionDateAutoSet = True
     VersionNumber = '01.02.00'
     ShowMessages = [mAskUpgrade, mConnLost, mHostUnreachable, mLostFile, mNoInfoFile, mNoUpdateAvailable, mPasswordRequest]
@@ -519,7 +519,7 @@ object frmMain: TfrmMain
     InfoFile.UpgradeMsg = 'first release'
     InfoFileURL = 'http://10.4.12.15/gygac_zt/db/AutoUpgrader.inf'
     VersionControl = byNumber
-    VersionDate = '05/03/2011'
+    VersionDate = '10/22/2012'
     VersionDateAutoSet = True
     VersionNumber = '01.02.00'
     ShowMessages = [mAskUpgrade, mConnLost, mHostUnreachable, mLostFile, mNoInfoFile, mNoUpdateAvailable, mPasswordRequest]
