@@ -170,21 +170,35 @@ begin
         begin
           with FRyxx do
           begin
-            if((Jb ='') or (Jb>UTF8Decode(FieldAsString(FieldIndex['jb']))) ) then   //在逃人员的级别最高
+            if((Level ='') or (Level>UTF8Decode(FieldAsString(FieldIndex['Level']))) ) then   //在逃人员的级别最高
             begin
-              Xm	:=	UTF8Decode(FieldAsString(FieldIndex['xm']));
-              Number	:=	UTF8Decode(FieldAsString(FieldIndex['number']));
-              Jb	:=	UTF8Decode(FieldAsString(FieldIndex['jb']));
-              Lb	:=	UTF8Decode(FieldAsString(FieldIndex['lb']));
-              Ztbh	:=	UTF8Decode(FieldAsString(FieldIndex['ztbh']));
+              Id	:=	UTF8Decode(FieldAsString(FieldIndex['Id']));
+              Name	:=	UTF8Decode(FieldAsString(FieldIndex['Name']));
+              IdCardNo	:=	UTF8Decode(FieldAsString(FieldIndex['IdCardNo']));
+              Sex	:=	UTF8Decode(FieldAsString(FieldIndex['Sex']));
+              Height	:=	UTF8Decode(FieldAsString(FieldIndex['Height']));
+              Sponsor	:=	UTF8Decode(FieldAsString(FieldIndex['Sponsor']));
+              Contact	:=	UTF8Decode(FieldAsString(FieldIndex['Contact']));
+              Phone	:=	UTF8Decode(FieldAsString(FieldIndex['Phone']));
+              Number	:=	UTF8Decode(FieldAsString(FieldIndex['Number']));
+              Level	:=	UTF8Decode(FieldAsString(FieldIndex['Level']));
+              Category	:=	UTF8Decode(FieldAsString(FieldIndex['Category']));
+
             end;
           end;
           with frmMain.strngrdResult do
           begin
-            Cells[0,iRow] := IntToStr(iRow);
-            Cells[1,iRow] := UTF8Decode(FieldAsString(FieldIndex['xm']));
-            Cells[2,iRow] := UTF8Decode(FieldAsString(FieldIndex['number']));
-            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['lb']));
+            Cells[0,iRow] := IntToStr(iRow);  
+            Cells[1,iRow] := UTF8Decode(FieldAsString(FieldIndex['Name']));
+            Cells[2,iRow] := UTF8Decode(FieldAsString(FieldIndex['IdCardNo']));
+            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sex']));
+            Cells[4,iRow] := UTF8Decode(FieldAsString(FieldIndex['Height']));
+            Cells[5,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sponsor']));
+            Cells[6,iRow] := UTF8Decode(FieldAsString(FieldIndex['Contact']));
+            Cells[7,iRow] := UTF8Decode(FieldAsString(FieldIndex['Phone']));
+            Cells[8,iRow] := UTF8Decode(FieldAsString(FieldIndex['Number']));
+            Cells[9,iRow] := UTF8Decode(FieldAsString(FieldIndex['Level']));
+            Cells[10,iRow] := UTF8Decode(FieldAsString(FieldIndex['Category']));
           end;
           Inc(iRow);
           Next;
@@ -235,13 +249,13 @@ begin
     soundfile := IniOptions.AlarmFileA;
     with ryxx do
     begin
-      if LowerCase(Jb) = 'a' then
+      if LowerCase(Level) = 'a' then
         soundfile := IniOptions.AlarmFileB
       else
-        if LowerCase(Jb) = 'b' then
+        if LowerCase(Level) = 'b' then
           soundfile := IniOptions.AlarmFileB
         else
-          if LowerCase(Jb) = 'c' then
+          if LowerCase(Level) = 'c' then
             soundfile := IniOptions.AlarmFileC ;
     end;
     PlaySound(PChar(soundfile), 0, 0);
