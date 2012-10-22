@@ -1,3 +1,4 @@
+
 unit Main;
 
 interface
@@ -243,7 +244,15 @@ var
   slutb : TSQLiteTable;
   strSQL : string;
   iRow : Integer;
+{$IFDEF DEBUG}
+  fieldCount : Integer;
+  iCol : Integer;
+{$ENDIF}
 begin
+{$IFDEF DEBUG}
+  fieldCount := strngrdResult.Cols.Count;
+{$ENDIF}
+
   if (edtInputName.Text <> '') then
   begin
     strSQL := Format(IniOptions.SQLXm,[edtInputName.Text + '%']);
@@ -256,7 +265,7 @@ begin
     end;
   end;
   if (strSQL <> '') then
-  begin 
+  begin
 
     slutb := CjryDb.GetTable(UTF8Encode(strSQL));
     try
@@ -268,15 +277,32 @@ begin
         begin
           with strngrdResult do
           begin
+{$IFDEF DEBUG}
+          for iCol := 0 to fieldCount -1 do
+          begin
+              Cells[iCol,iRow] := UTF8Decode(FieldAsString(FieldIndex[iCol]));
+
+          end;
+
+{$ELSE}
             Cells[0,iRow] := IntToStr(iRow);
-            Cells[1,iRow] := UTF8Decode(FieldAsString(FieldIndex['xm']));
-            Cells[2,iRow] := UTF8Decode(FieldAsString(FieldIndex['number']));
-            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['lb']));
+            Cells[1,iRow] := UTF8Decode(FieldAsString(FieldIndex['Name']));
+            Cells[2,iRow] := UTF8Decode(FieldAsString(FieldIndex['IdCardNo']));
+            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sex']));
+            Cells[4,iRow] := UTF8Decode(FieldAsString(FieldIndex['Height']));
+            Cells[5,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sponsor']));
+            Cells[6,iRow] := UTF8Decode(FieldAsString(FieldIndex['Contact']));
+            Cells[7,iRow] := UTF8Decode(FieldAsString(FieldIndex['Phone']));
+            Cells[8,iRow] := UTF8Decode(FieldAsString(FieldIndex['Number']));
+            Cells[9,iRow] := UTF8Decode(FieldAsString(FieldIndex['Level']));
+            Cells[10,iRow] := UTF8Decode(FieldAsString(FieldIndex['Category']));
+            
+{$ENDIF}
           end;
           Inc(iRow);
           Next;
-        end;  
-      end;     
+        end;
+      end;
     finally
       FreeAndNil(slutb);
     end;      
@@ -370,7 +396,7 @@ begin
     FreeAndNil(FieldList);
     FreeAndNil(FieldWidthList);
   end;
-  
+
 end;
 
 procedure TfrmMain.ClearstrnGrid;
