@@ -1,6 +1,6 @@
 object frmStatis: TfrmStatis
-  Left = 240
-  Top = 145
+  Left = 381
+  Top = 196
   Width = 606
   Height = 510
   Caption = #26597#35810#32479#35745

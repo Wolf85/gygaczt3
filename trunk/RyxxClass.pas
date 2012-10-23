@@ -64,8 +64,10 @@ begin
 
   if value = '1' then
     FSex := 'ÄÐ'
+  else if value = '0' then
+      FSex := 'Å®'
   else
-    FSex := 'Å®';
+    FSex := value;
   
 end;
 
