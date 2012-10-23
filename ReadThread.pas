@@ -244,11 +244,12 @@ var
   soundfile : string;
 begin
   soundfile := IniOptions.PassedSoundFile;        //默认播放通过声音
-  if (IniOptions.PlaySound) and (ryxx<>nil) then
+  if (ryxx<>nil) then
   begin
     soundfile := IniOptions.AlarmFileA;
     with ryxx do
     begin
+
       if LowerCase(Level) = 'a' then
         soundfile := IniOptions.AlarmFileB
       else
@@ -256,10 +257,13 @@ begin
           soundfile := IniOptions.AlarmFileB
         else
           if LowerCase(Level) = 'c' then
-            soundfile := IniOptions.AlarmFileC ;
+            soundfile := IniOptions.AlarmFileC 
+        else
+            soundfile := IniOptions.AlarmFileB ;
     end;
-    PlaySound(PChar(soundfile), 0, 0);
   end;
+  if (IniOptions.PlaySound) then
+    PlaySound(PChar(soundfile), 0, 0);
 end;
  
 end.
