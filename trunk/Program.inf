@@ -11,11 +11,11 @@ Version=02.00.00
 ConnString=
 Data Source=dhxt.db3
 DefaultDataFilename=dhxt.7z.uTMP
-SQL=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height]	,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [IdCardNo] LIKE '%s' LIMIT 10
+SQL=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height]	,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [IdCardNo] = '%s' LIMIT 10
 ;SQL=SELECT xm , number , jb, lb , ztbh FROM ryxx where number= '%s' Limit 100
 ;SQLXm=SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where xm Like '%s' Limit 100
-SQLXm=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height]	,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [Name] LIKE '%s' LIMIT 10
-SQLNumber=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height] ,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [IdCardNo] LIKE '%s' LIMIT 10
+SQLXm=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height]	,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [Name] LIKE '%s' LIMIT 100
+SQLNumber=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height] ,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [IdCardNo] LIKE '%s' LIMIT 100
 ;数据表格显示字段，以英文的“,”分隔
 ViewFields=序号,姓名,证件号码,性别,身高,联系单位,联系人,联系电话,编号,级别,案件类别
 ;每列的宽度，以英文的“,”分隔，与ViewFields的个数匹配
