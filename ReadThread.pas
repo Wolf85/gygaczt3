@@ -6,6 +6,10 @@
 {       版权所有 (C) 2010 贵阳公安处                    }
 {                                                       }
 {*******************************************************}
+{
+modify：
+  2012-10-25：简化PlayHintSound函数对Level的判断，所以数据库中Level的值必须为大写
+}
 unit ReadThread;
 
 interface
@@ -249,7 +253,18 @@ begin
     soundfile := IniOptions.AlarmFileA;
     with ryxx do
     begin
-
+{$IFDEF DEBUG}
+      if Level = 'A' then
+        soundfile := IniOptions.AlarmFileB
+      else
+        if Level = 'B' then
+          soundfile := IniOptions.AlarmFileB
+        else
+          if Level = 'C' then
+            soundfile := IniOptions.AlarmFileC
+        else
+            soundfile := IniOptions.AlarmFileB ;
+{$ELSE}
       if LowerCase(Level) = 'a' then
         soundfile := IniOptions.AlarmFileB
       else
@@ -257,14 +272,15 @@ begin
           soundfile := IniOptions.AlarmFileB
         else
           if LowerCase(Level) = 'c' then
-            soundfile := IniOptions.AlarmFileC 
+            soundfile := IniOptions.AlarmFileC
         else
             soundfile := IniOptions.AlarmFileB ;
+{$ENDIF}
     end;
   end;
   if (IniOptions.PlaySound) then
     PlaySound(PChar(soundfile), 0, 0);
 end;
- 
+
 end.
 
