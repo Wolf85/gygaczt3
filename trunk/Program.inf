@@ -10,16 +10,16 @@
 Version=02.00.00
 ConnString=
 Data Source=dhxt.db3
-DefaultDataFilename=dhxt.7z.uTMP
-SQL=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height]	,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [IdCardNo] = '%s' LIMIT 10
+DefaultDataFilename=dhxt.mdb.uTMP
+SQL=SELECT Id, Name, IdCardNo, Level, Category, Sex, Height, Sponsor, Contact, Phone, Number FROM Ryxx WHERE [IdCardNo] = '%s' LIMIT 10
 ;SQL=SELECT xm , number , jb, lb , ztbh FROM ryxx where number= '%s' Limit 100
-;SQLXm=SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where xm Like '%s' Limit 100
-SQLXm=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height]	,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [Name] LIKE '%s' LIMIT 100
-SQLNumber=SELECT [Id] ,[Name] ,[IdCardNo] ,[Sex] ,[Height] ,[Sponsor] ,[Contact] ,[Phone] ,[Number] ,[Level] ,[Category] FROM ryxx WHERE [IdCardNo] LIKE '%s' LIMIT 100
+;SQLXm=SELECT xm as 姓名, number as 证件号码, jb, lb as 案件类别, ztbh as 在逃编号 FROM ryxx where xm Like '%s' Limit 1000
+SQLXm=SELECT Id, Name, IdCardNo, Level, Category, Sex, Height, Sponsor, Contact, Phone, Number FROM Ryxx WHERE [Name] LIKE '%s' LIMIT 1000
+SQLNumber=SELECT Id, Name, IdCardNo, Level, Category, Sex, Height, Sponsor, Contact, Phone, Number FROM Ryxx WHERE [IdCardNo] = '%s' LIMIT 100
 ;数据表格显示字段，以英文的“,”分隔
-ViewFields=序号,姓名,证件号码,性别,身高,联系单位,联系人,联系电话,编号,级别,案件类别
+ViewFields=序号,姓名,证件号码,级别,案件类别,性别,身高,联系单位,联系人,联系电话,编号
 ;每列的宽度，以英文的“,”分隔，与ViewFields的个数匹配
-ViewFieldsWidth=50,100,200,30,30,250,100,100,100,30,80
+ViewFieldsWidth=50,100,200,30,80,30,30,250,100,100,100
 ;播放声音，0：不允许，1：允许
 PlaySound=1
 AlarmFileA=SIREN1.WAV

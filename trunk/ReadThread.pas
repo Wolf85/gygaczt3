@@ -195,14 +195,15 @@ begin
             Cells[0,iRow] := IntToStr(iRow);  
             Cells[1,iRow] := UTF8Decode(FieldAsString(FieldIndex['Name']));
             Cells[2,iRow] := UTF8Decode(FieldAsString(FieldIndex['IdCardNo']));
-            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sex']));
-            Cells[4,iRow] := UTF8Decode(FieldAsString(FieldIndex['Height']));
-            Cells[5,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sponsor']));
-            Cells[6,iRow] := UTF8Decode(FieldAsString(FieldIndex['Contact']));
-            Cells[7,iRow] := UTF8Decode(FieldAsString(FieldIndex['Phone']));
-            Cells[8,iRow] := UTF8Decode(FieldAsString(FieldIndex['Number']));
-            Cells[9,iRow] := UTF8Decode(FieldAsString(FieldIndex['Level']));
-            Cells[10,iRow] := UTF8Decode(FieldAsString(FieldIndex['Category']));
+            Cells[3,iRow] := UTF8Decode(FieldAsString(FieldIndex['Level']));
+            Cells[4,iRow] := UTF8Decode(FieldAsString(FieldIndex['Category']));
+            Cells[5,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sex']));
+            Cells[6,iRow] := UTF8Decode(FieldAsString(FieldIndex['Height']));
+            Cells[7,iRow] := UTF8Decode(FieldAsString(FieldIndex['Sponsor']));
+            Cells[8,iRow] := UTF8Decode(FieldAsString(FieldIndex['Contact']));
+            Cells[9,iRow] := UTF8Decode(FieldAsString(FieldIndex['Phone']));
+            Cells[10,iRow] := UTF8Decode(FieldAsString(FieldIndex['Number']));
+
           end;
           Inc(iRow);
           Next;
